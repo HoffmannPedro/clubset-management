@@ -1,0 +1,22 @@
+# Java / Spring Boot
+server/target/
+server/.mvn/wrapper/maven-wrapper.properties
+server/mvnw
+server/mvnw.cmd
+server/.classpath
+server/.project
+server/.settings/
+server/.vscode/
+server/*.log
+
+# Node / React
+client/node_modules/
+client/dist/
+client/.env
+client/.DS_Store
+client/coverage/
+
+# General
+.idea/
+*.swp
+.DS_Store
