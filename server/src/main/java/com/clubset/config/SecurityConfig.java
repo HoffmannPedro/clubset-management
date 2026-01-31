@@ -1,4 +1,4 @@
-package com.clubset.config;
+package com.clubset.config; // ⚠️ Asegúrate que coincida con tu carpeta real
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,11 +19,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Activamos CORS con la configuración que definimos abajo
+            // 1. Integrar la configuración de CORS definida abajo
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 2. Desactivamos CSRF (necesario para APIs que usan POST/PUT/DELETE)
+            // 2. Desactivar CSRF (necesario para que funcionen los POST desde otro dominio)
             .csrf(csrf -> csrf.disable())
-            // 3. Permitimos todas las peticiones por ahora
+            // 3. Permitir acceso público a todo (por ahora)
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             );
@@ -35,16 +35,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // El puerto por defecto de Vite es 5173
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        // --- AQUÍ ESTABA EL ERROR ---
+        // Agregamos AMBOS dominios: Local y Producción (Vercel)
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://clubset-management.vercel.app", // <--- IMPORTANTE: Sin barra al final
+            "http://localhost:5173"
+        ));
         
-        // Métodos permitidos
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         
-        // Headers permitidos (necesario para enviar JSON y tokens)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
+        // Headers permitidos (necesario para JWT y JSON)
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control", "X-Requested-With"));
         
-        // Permitir envío de cookies o credenciales si fuera necesario
+        // Permitir credenciales
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
