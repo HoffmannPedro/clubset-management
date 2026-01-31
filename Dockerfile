@@ -1,23 +1,23 @@
-# Etapa 1: Construcción (Build)
-FROM maven:3.8.5-openjdk-17 AS build
+# Etapa 1: Construcción (Build) - AHORA USAMOS JAVA 21
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copiamos el pom.xml y el código fuente del server
+# Copiamos archivos
 COPY server/pom.xml .
 COPY server/src ./src
 
-# Empaquetamos el .jar (saltando los tests para ir más rápido)
+# Compilamos
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Ejecución (Run)
-FROM eclipse-temurin:17-jdk-alpine
+# Etapa 2: Ejecución (Run) - AHORA USAMOS JAVA 21
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copiamos el .jar generado en la etapa anterior
+# Copiamos el .jar generado
 COPY --from=build /app/target/*.jar app.jar
 
-# Exponemos el puerto 8080
+# Exponemos el puerto
 EXPOSE 8080
 
-# Comando de arranque
+# Ejecutamos
 ENTRYPOINT ["java","-jar","app.jar"]
