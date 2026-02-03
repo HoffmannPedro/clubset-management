@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getUsuarios } from '../services/usuarioService';
+import { getUsuarios } from '../../services/usuarioService';
 
 const ListaUsuarios = ({ refreshKey }) => {
     const [usuarios, setUsuarios] = useState([]);

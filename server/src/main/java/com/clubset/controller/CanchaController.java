@@ -24,4 +24,10 @@ public class CanchaController {
     public CanchaDTO crear(@RequestBody Cancha cancha) {
         return canchaService.guardarCancha(cancha);
     }
+    
+    // NUEVO ENDPOINT PARA ACTIVAR/DESACTIVAR
+    @PatchMapping("/{id}/toggle")
+    public CanchaDTO toggleEstado(@PathVariable Long id) {
+        return canchaService.toggleEstado(id);
+    }
 }

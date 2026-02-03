@@ -1,4 +1,4 @@
-package com.clubset.config; // ⚠️ Asegúrate que coincida con tu carpeta real
+package com.clubset.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,10 +35,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // --- AQUÍ ESTABA EL ERROR ---
         // Agregamos AMBOS dominios: Local y Producción (Vercel)
         configuration.setAllowedOrigins(Arrays.asList(
-            "https://clubset-management.vercel.app", // <--- IMPORTANTE: Sin barra al final
+            "https://clubset-management.vercel.app",
             "http://localhost:5173"
         ));
         

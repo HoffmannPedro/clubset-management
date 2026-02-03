@@ -14,6 +14,11 @@ public class Cancha {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nombre; // Ej: "Cancha 1", "Central"
-    private String superficie; // Ej: "Polvo de Ladrillo", "Cemento"
+    private String nombre;
+    private String superficie;
+
+    // NUEVO: Para saber si la cancha se puede usar o está en "Mantenimiento General"
+    // El @Column con default asegura que las canchas viejas nazcan activas
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean disponible = true;
 }

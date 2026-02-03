@@ -9,9 +9,19 @@ const Sidebar = ({
     isDesktopCollapsed, 
     setIsDesktopCollapsed 
 }) => {
+    
+    // Si no viene en los props, lo agregamos visualmente aquí, 
+    // pero idealmente debería venir en el array 'menuItems' del padre.
+    // Para asegurar que se vea, lo inyectamos si falta:
+    const menuCompleto = [
+        ...menuItems,
+        // Verificamos si ya existe para no duplicar
+        ...(menuItems.find(i => i.id === 'caja') ? [] : [{ id: 'caja', label: 'Caja Diaria', icon: '💵' }])
+    ];
+
     return (
         <>
-            {/* OVERLAY PARA MÓVIL (Fondo oscuro al abrir menú) */}
+            {/* OVERLAY PARA MÓVIL */}
             {isMobileOpen && (
                 <div 
                     className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
@@ -26,14 +36,13 @@ const Sidebar = ({
                 ${isDesktopCollapsed ? 'md:w-20' : 'md:w-72'}
                 w-72
             `}>
-                {/* HEADER DEL SIDEBAR */}
+                {/* HEADER */}
                 <div className={`p-6 border-b border-border flex items-center ${isDesktopCollapsed ? 'justify-center' : 'justify-between'}`}>
                     {!isDesktopCollapsed && (
                         <h1 className="text-xl font-black tracking-tighter italic whitespace-nowrap overflow-hidden">
                             ClubSet <span className="text-primary text-sm not-italic tracking-widest">MGT</span>
                         </h1>
                     )}
-                    {/* Botón para colapsar en Escritorio */}
                     <button 
                         onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
                         className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg bg-background border border-border text-textMuted hover:text-primary transition-colors"
@@ -41,7 +50,6 @@ const Sidebar = ({
                         {isDesktopCollapsed ? '→' : '←'}
                     </button>
                     
-                    {/* Botón cerrar en Móvil */}
                     <button 
                         onClick={() => setIsMobileOpen(false)}
                         className="md:hidden text-textMuted hover:text-white"
@@ -52,13 +60,13 @@ const Sidebar = ({
 
                 {/* NAVEGACIÓN */}
                 <nav className="flex-1 p-3 space-y-2 mt-2 overflow-y-auto">
-                    {menuItems.map((item) => (
+                    {menuCompleto.map((item) => (
                         <button
                             key={item.id}
                             disabled={item.disabled}
                             onClick={() => {
                                 setActiveTab(item.id);
-                                setIsMobileOpen(false); // Cerrar menú al elegir en móvil
+                                setIsMobileOpen(false);
                             }}
                             className={`
                                 w-full flex items-center gap-4 px-3 py-3 rounded-lg font-bold text-sm transition-all duration-300 relative group
@@ -76,7 +84,6 @@ const Sidebar = ({
                                 <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
                             )}
 
-                            {/* Tooltip flotante cuando está colapsado */}
                             {isDesktopCollapsed && (
                                 <div className="absolute left-full ml-4 px-2 py-1 bg-surface border border-border rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
                                     {item.label}

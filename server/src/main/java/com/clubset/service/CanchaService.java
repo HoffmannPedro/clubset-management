@@ -15,15 +15,29 @@ public class CanchaService {
     private final CanchaRepository canchaRepository;
 
     public List<CanchaDTO> obtenerTodas() {
-        return canchaRepository.findAll().stream().map(
-                this::convertirADto
-        ).toList(
-        );
+        return canchaRepository.findAll().stream()
+                .map(this::convertirADto)
+                .toList();
     }
 
     public CanchaDTO guardarCancha(Cancha cancha) {
-        Cancha guardada = canchaRepository.save(cancha);
-        return convertirADto(guardada);
+        if (cancha.getDisponible() == null)
+            cancha.setDisponible(true);
+        return convertirADto(canchaRepository.save(cancha));
+    }
+
+    // Método necesario para activar/desactivar canchas
+    public CanchaDTO toggleEstado(Long id) {
+        Cancha cancha = canchaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
+
+        // Invertimos el valor (true -> false / false -> true)
+        // Usamos Boolean.TRUE.equals para evitar nulos
+        boolean nuevoEstado = !Boolean.TRUE.equals(cancha.getDisponible());
+        cancha.setDisponible(nuevoEstado);
+
+        Cancha actualizada = canchaRepository.save(cancha);
+        return convertirADto(actualizada);
     }
 
     // Helpers
@@ -32,6 +46,7 @@ public class CanchaService {
         dto.setId(cancha.getId());
         dto.setNombre(cancha.getNombre());
         dto.setSuperficie(cancha.getSuperficie());
+        dto.setDisponible(cancha.getDisponible());
         return dto;
     }
 }

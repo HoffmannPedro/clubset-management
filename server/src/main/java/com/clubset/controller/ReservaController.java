@@ -1,5 +1,6 @@
 package com.clubset.controller;
 
+import lombok.Data; // Necesario para la clase interna
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -7,7 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.clubset.dto.ReservaDTO;
 import com.clubset.service.ReservaService;
+import com.clubset.enums.MetodoPago; // Asegúrate de importar esto
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -44,21 +47,16 @@ public class ReservaController {
         }
     }
     
-    // --- NUEVO ENDPOINT: Cancelar TODO el grupo ---
-    // Usamos el ID de UNA de las reservas para encontrar el grupo y borrarlo
     @DeleteMapping("/{id}/completo")
     public ResponseEntity<?> cancelarGrupo(@PathVariable Long id) {
         try {
-            // 1. Buscamos el código del grupo usando el ID de la reserva
             String codigo = reservaService.obtenerCodigoPorReservaId(id);
             
             if (codigo == null) {
-                // Si no tiene código (es reserva vieja o única), borramos solo esa
                 reservaService.cancelarReserva(id);
-                return ResponseEntity.ok("Reserva única eliminada (no pertenecía a un grupo)");
+                return ResponseEntity.ok("Reserva única eliminada");
             }
             
-            // 2. Si tiene código, borramos TODAS
             reservaService.cancelarTurnoFijo(codigo);
             return ResponseEntity.ok("Turno fijo completo eliminado correctamente");
             
@@ -67,6 +65,24 @@ public class ReservaController {
         }
     }
 
+    // --- NUEVO ENDPOINT DE CAJA ---
+    // Recibe un JSON como: { "monto": 500, "metodoPago": "EFECTIVO", "observacion": "Seña" }
+    @PostMapping("/{id}/pagos")
+    public ResponseEntity<?> registrarPago(@PathVariable Long id, @RequestBody PagoRequest request) {
+        try {
+            ReservaDTO actualizado = reservaService.registrarPago(
+                id, 
+                request.getMonto(), 
+                request.getMetodoPago(), 
+                request.getObservacion()
+            );
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Mantenemos este por compatibilidad, pero idealmente el frontend migrará al de arriba
     @PutMapping("/{id}/pago")
     public ResponseEntity<?> togglePago(@PathVariable Long id) {
         try {
@@ -75,5 +91,14 @@ public class ReservaController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    // --- DTO INTERNO PARA EL REQUEST DE PAGO ---
+    // Al ser estático y pequeño, puede vivir aquí. 
+    @Data
+    public static class PagoRequest {
+        private BigDecimal monto;
+        private MetodoPago metodoPago;
+        private String observacion;
     }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createCancha } from '../services/canchaService';
+import { createCancha } from '../../services/canchaService';
 
 const FormularioCancha = ({ onCanchaCreada }) => {
   const [formData, setFormData] = useState({ nombre: '', superficie: 'Polvo de Ladrillo' });
