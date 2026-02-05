@@ -1,32 +1,45 @@
 package com.clubset.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Integrar la configuración de CORS definida abajo
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 2. Desactivar CSRF (necesario para que funcionen los POST desde otro dominio)
             .csrf(csrf -> csrf.disable())
-            // 3. Permitir acceso público a todo (por ahora)
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+                // 1. Rutas Públicas (Login, Registro y archivos estáticos)
+                .requestMatchers("/api/auth/**").permitAll() 
+                .requestMatchers("/api/public/**").permitAll()
+                
+                // 2. Todo lo demás requiere autenticación
+                .anyRequest().authenticated()
+            )
+            // 3. Sesión Stateless (Sin cookies, solo JWT)
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -35,18 +48,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Agregamos AMBOS dominios: Local y Producción (Vercel)
+        // Producción y Local
         configuration.setAllowedOrigins(Arrays.asList(
             "https://clubset-management.vercel.app",
             "http://localhost:5173"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        
-        // Headers permitidos (necesario para JWT y JSON)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control", "X-Requested-With"));
-        
-        // Permitir credenciales
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getUsuarios } from '../../services/usuarioService';
 
-const ListaUsuarios = ({ refreshKey }) => {
+// RECIBIMOS LAS NUEVAS PROPS: onEditar y onEliminar
+const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
     const [usuarios, setUsuarios] = useState([]);
     const [cargando, setCargando] = useState(true);
 
@@ -33,12 +34,10 @@ const ListaUsuarios = ({ refreshKey }) => {
                 {usuarios.map(u => (
                     <div key={u.id} className="bg-surface border border-border rounded-xl p-5 shadow-sm relative overflow-hidden group">
                         
-                        {/* Pequeña barra decorativa a la izquierda */}
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary/50 group-hover:bg-secondary transition-colors"></div>
 
                         <div className="flex items-start justify-between mb-3 pl-2">
                             <div className="flex items-center gap-3">
-                                {/* Avatar */}
                                 <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary font-black text-sm border border-secondary/20">
                                     {u.nombre.charAt(0)}
                                 </div>
@@ -49,13 +48,28 @@ const ListaUsuarios = ({ refreshKey }) => {
                                     </span>
                                 </div>
                             </div>
-                            {/* Status Dot */}
                             <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(47,168,110,0.8)] animate-pulse"></div>
                         </div>
 
-                        <div className="pl-14">
+                        <div className="pl-14 mb-4">
                             <p className="text-xs text-textMuted font-bold uppercase tracking-widest mb-1 opacity-50">Contacto</p>
                             <p className="text-sm text-text break-all font-medium">{u.email}</p>
+                        </div>
+
+                        {/* --- BOTONES DE ACCIÓN MÓVIL --- */}
+                        <div className="pl-14 flex gap-3 border-t border-border pt-3">
+                            <button 
+                                onClick={() => onEditar(u)} 
+                                className="flex-1 bg-blue-500/10 text-blue-400 text-xs font-bold py-2 rounded hover:bg-blue-500/20 transition-colors"
+                            >
+                                ✏️ EDITAR
+                            </button>
+                            <button 
+                                onClick={() => onEliminar(u.id)}
+                                className="flex-1 bg-red-500/10 text-red-400 text-xs font-bold py-2 rounded hover:bg-red-500/20 transition-colors"
+                            >
+                                🗑️ BORRAR
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -72,7 +86,7 @@ const ListaUsuarios = ({ refreshKey }) => {
                                 <th className="p-6">Identidad del Socio</th>
                                 <th className="p-6">Canal de Comunicación</th>
                                 <th className="p-6">Rol</th>
-                                <th className="p-6 text-right">Status</th>
+                                <th className="p-6 text-center">Acciones</th> {/* Nueva Columna */}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -92,8 +106,24 @@ const ListaUsuarios = ({ refreshKey }) => {
                                             {u.rol}
                                         </span>
                                     </td>
-                                    <td className="p-6 text-right">
-                                        <span className="inline-block w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(47,168,110,0.5)]"></span>
+                                    {/* --- BOTONES DE ACCIÓN ESCRITORIO --- */}
+                                    <td className="p-6 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button 
+                                                onClick={() => onEditar(u)}
+                                                className="p-2 hover:bg-blue-500/20 text-textMuted hover:text-blue-400 rounded-lg transition-all"
+                                                title="Editar Usuario"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button 
+                                                onClick={() => onEliminar(u.id)}
+                                                className="p-2 hover:bg-red-500/20 text-textMuted hover:text-red-400 rounded-lg transition-all"
+                                                title="Eliminar Usuario"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

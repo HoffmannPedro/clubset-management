@@ -1,7 +1,8 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContext'; // Importamos el contexto
 
 const Sidebar = ({ 
-    menuItems, 
+    menuItems, // Ahora confiamos ciegamente en lo que nos manda el padre
     activeTab, 
     setActiveTab, 
     isMobileOpen, 
@@ -10,14 +11,8 @@ const Sidebar = ({
     setIsDesktopCollapsed 
 }) => {
     
-    // Si no viene en los props, lo agregamos visualmente aquí, 
-    // pero idealmente debería venir en el array 'menuItems' del padre.
-    // Para asegurar que se vea, lo inyectamos si falta:
-    const menuCompleto = [
-        ...menuItems,
-        // Verificamos si ya existe para no duplicar
-        ...(menuItems.find(i => i.id === 'caja') ? [] : [{ id: 'caja', label: 'Caja Diaria', icon: '💵' }])
-    ];
+    // Obtenemos datos reales del usuario y la función de salir
+    const { user, logout } = useAuth();
 
     return (
         <>
@@ -60,7 +55,8 @@ const Sidebar = ({
 
                 {/* NAVEGACIÓN */}
                 <nav className="flex-1 p-3 space-y-2 mt-2 overflow-y-auto">
-                    {menuCompleto.map((item) => (
+                    {/* USAMOS DIRECTAMENTE menuItems SIN INYECTAR NADA RARO */}
+                    {menuItems.map((item) => (
                         <button
                             key={item.id}
                             disabled={item.disabled}
@@ -93,17 +89,31 @@ const Sidebar = ({
                     ))}
                 </nav>
 
-                {/* FOOTER USUARIO */}
+                {/* FOOTER USUARIO (AHORA DINÁMICO) */}
                 <div className="p-4 border-t border-border">
-                    <div className={`flex items-center gap-3 p-2 rounded-xl border border-transparent ${!isDesktopCollapsed ? 'bg-background border-border' : 'justify-center'}`}>
-                        <div className="w-8 h-8 rounded-full bg-terciary flex items-center justify-center font-black text-btnText text-xs flex-shrink-0">
-                            AD
+                    <div className={`flex items-center gap-3 p-2 rounded-xl border border-transparent transition-all ${!isDesktopCollapsed ? 'bg-background border-border' : 'justify-center'}`}>
+                        
+                        {/* Avatar con iniciales reales */}
+                        <div className="w-8 h-8 rounded-full bg-terciary flex items-center justify-center font-black text-btnText text-xs flex-shrink-0 uppercase">
+                            {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
                         </div>
+                        
                         {!isDesktopCollapsed && (
-                            <div className="overflow-hidden">
-                                <p className="text-xs font-black truncate">Admin</p>
-                                <p className="text-[9px] text-textMuted uppercase truncate">Root</p>
+                            <div className="overflow-hidden flex-1 min-w-0">
+                                <p className="text-xs font-black truncate">{user?.nombre} {user?.apellido}</p>
+                                <p className="text-[9px] text-textMuted uppercase truncate">{user?.rol}</p>
                             </div>
+                        )}
+
+                        {/* Botón Logout */}
+                        {!isDesktopCollapsed && (
+                            <button 
+                                onClick={logout}
+                                className="text-textMuted hover:text-red-500 transition-colors p-1"
+                                title="Cerrar Sesión"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            </button>
                         )}
                     </div>
                 </div>
