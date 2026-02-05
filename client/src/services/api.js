@@ -8,8 +8,8 @@ const getBaseUrl = () => {
     if (window.location.hostname === 'localhost') {
         return 'http://localhost:8080/api';
     }
-    
-    return 'https://clubset-backend.onrender.com';
+
+    return 'https://clubset-backend.onrender.com/api';
 };
 
 const api = axios.create({
