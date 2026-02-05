@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; // Agrega useEffect
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../layout/Sidebar';
 import FormularioCancha from '../canchas/FormularioCancha';
@@ -9,15 +9,17 @@ import FormularioReserva from '../reservas/FormularioReserva';
 import GrillaReservas from '../reservas/GrillaReservas';
 import CajaView from '../caja/CajaView';
 import DashboardView from '../dashboard/DashboardView';
-import PerfilUsuario from '../usuarios/PerfilUsuario';
+import PerfilUsuario from '../usuarios/PerfilUsuario'; // <--- 1. Importado
 import { deleteUsuario } from '../../services/usuarioService';
 
 const AdminPanel = () => {
     const { user } = useAuth();
-
     const [usuarioEditar, setUsuarioEditar] = useState(null);
+    const [seleccionGrilla, setSeleccionGrilla] = useState(null);
 
-    // Lógica segura para determinar la pestaña inicial
+    // --- 2. Nuevo Estado para Inspección ---
+    const [usuarioInspeccionado, setUsuarioInspeccionado] = useState(null);
+
     const getInitialTab = () => {
         if (user?.rol === 'ADMIN') return 'dashboard';
         return 'perfil';
@@ -28,45 +30,35 @@ const AdminPanel = () => {
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Efecto para redirigir si el usuario cambia (ej: recarga de página)
     useEffect(() => {
         setActiveTab(getInitialTab());
     }, [user]);
 
     const isAdmin = user?.rol === 'ADMIN';
 
-    // MENÚ ESTRICTO
     const allMenuItems = [
-        { id: 'dashboard', label: 'Resumen General', icon: '📊', roles: ['ADMIN'] }, // <--- SOLO ADMIN
+        { id: 'dashboard', label: 'Resumen General', icon: '📊', roles: ['ADMIN'] },
         { id: 'perfil', label: 'Mi Perfil', icon: '👤', roles: ['ADMIN', 'SOCIO'] },
-        { id: 'caja', label: 'Caja Diaria', icon: '💵', roles: ['ADMIN'] }, // <--- SOLO ADMIN
+        { id: 'caja', label: 'Caja Diaria', icon: '💵', roles: ['ADMIN'] },
         { id: 'reservas', label: 'Gestión Reservas', icon: '📅', roles: ['ADMIN'] },
         { id: 'canchas', label: 'Canchas', icon: '🎾', roles: ['ADMIN'] },
         { id: 'usuarios', label: 'Socios', icon: '👥', roles: ['ADMIN'] },
     ];
 
-    // Filtramos el menú
     const menuItems = allMenuItems.filter(item => item.roles.includes(user?.rol));
 
     const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
 
-    // --- FUNCIONES DE ACCIÓN ---
     const handleEditar = (usuario) => {
-        setUsuarioEditar(usuario); // Ponemos al usuario en el "escenario"
-        // Hacemos scroll suave hacia arriba para ver el formulario
+        setUsuarioEditar(usuario);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleEliminar = async (id) => {
-        // 1. Confirmación de seguridad
         if (window.confirm('⚠️ ¿Estás seguro de eliminar este usuario permanentemente?')) {
             try {
-                // 2. Llamada al Backend
                 await deleteUsuario(id);
-                
-                // 3. Refrescar la tabla
                 triggerRefresh();
-                
             } catch (error) {
                 console.error("Error al eliminar:", error);
                 alert("Hubo un error al intentar eliminar el usuario.");
@@ -75,13 +67,34 @@ const AdminPanel = () => {
     };
 
     const handleCancelarEdicion = () => {
-        setUsuarioEditar(null); // Limpiamos el formulario
+        setUsuarioEditar(null);
     };
 
     const handleExito = () => {
         triggerRefresh();
-        setUsuarioEditar(null); // Si editó, limpiamos. Si creó, ya se limpia solo.
+        setUsuarioEditar(null);
     };
+
+    const handleSlotClick = (canchaId, hora, fecha) => {
+        setSeleccionGrilla({ canchaId, hora, fecha });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleReservaExitosa = () => {
+        triggerRefresh();
+        setSeleccionGrilla(null);
+    };
+
+    // --- 3. Nuevos Handlers para Perfil ---
+    const handleVerPerfil = (id) => {
+        setUsuarioInspeccionado(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleVolverALista = () => {
+        setUsuarioInspeccionado(null);
+    };
+    // -------------------------------------
 
     return (
         <div className="flex min-h-screen bg-background text-text font-sans">
@@ -107,15 +120,10 @@ const AdminPanel = () => {
                 <div className="flex-1 p-4 md:p-10 overflow-x-hidden">
                     <div className="max-w-6xl mx-auto">
 
-                        {/* Renderizado Condicional Seguro */}
-
-                        {/* SOLO ADMIN ve el Dashboard */}
                         {isAdmin && activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
 
-                        {/* TODOS ven Perfil */}
                         {activeTab === 'perfil' && <PerfilUsuario />}
 
-                        {/* SOLO ADMIN ve Caja */}
                         {isAdmin && activeTab === 'caja' && <CajaView />}
 
                         {isAdmin && activeTab === 'canchas' && (
@@ -127,28 +135,49 @@ const AdminPanel = () => {
 
                         {isAdmin && activeTab === 'usuarios' && (
                             <div className="space-y-8 animate-in slide-in-from-bottom-4">
-                                {/* Pasamos las nuevas props al formulario */}
-                                <FormularioUsuario
-                                    onUsuarioCreado={handleExito}
-                                    usuarioAEditar={usuarioEditar} // <--- DATOS
-                                    onCancelar={handleCancelarEdicion} // <--- CONTROL
-                                />
+                                
+                                {/* 4. Renderizado Condicional: Lista o Perfil */}
+                                {usuarioInspeccionado ? (
+                                    <div>
+                                        <button 
+                                            onClick={handleVolverALista}
+                                            className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-textMuted hover:text-primary transition-colors"
+                                        >
+                                            ← Volver a la Lista de Socios
+                                        </button>
+                                        <PerfilUsuario usuarioId={usuarioInspeccionado} />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <FormularioUsuario
+                                            onUsuarioCreado={handleExito}
+                                            usuarioAEditar={usuarioEditar}
+                                            onCancelar={handleCancelarEdicion}
+                                        />
 
-                                <div className="overflow-x-auto pb-4">
-                                    {/* Pasamos las funciones a la lista */}
-                                    <ListaUsuarios
-                                        refreshKey={refreshTrigger}
-                                        onEditar={handleEditar}      // <--- Conexión Lápiz
-                                        onEliminar={handleEliminar}  // <--- Conexión Basura
-                                    />
-                                </div>
+                                        <div className="overflow-x-auto pb-4">
+                                            <ListaUsuarios
+                                                refreshKey={refreshTrigger}
+                                                onEditar={handleEditar}
+                                                onEliminar={handleEliminar}
+                                                onVerPerfil={handleVerPerfil} // <--- Pasamos la función
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 
                         {isAdmin && activeTab === 'reservas' && (
                             <div className="space-y-8 animate-in slide-in-from-bottom-4">
-                                <FormularioReserva onReservaCreada={triggerRefresh} />
-                                <div className="overflow-x-auto pb-4"><GrillaReservas refreshKey={refreshTrigger} /></div>
+                                <FormularioReserva
+                                    onReservaCreada={handleReservaExitosa}
+                                    preseleccion={seleccionGrilla}
+                                />
+                                <GrillaReservas
+                                    refreshKey={refreshTrigger}
+                                    onEmptySlotClick={handleSlotClick}
+                                />
                             </div>
                         )}
 

@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getUsuarios } from '../../services/usuarioService';
 
-// RECIBIMOS LAS NUEVAS PROPS: onEditar y onEliminar
-const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
+// 1. Aceptamos la nueva prop onVerPerfil
+const ListaUsuarios = ({ refreshKey, onEditar, onEliminar, onVerPerfil }) => {
     const [usuarios, setUsuarios] = useState([]);
     const [cargando, setCargando] = useState(true);
 
@@ -27,9 +27,7 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
 
     return (
         <div>
-            {/* ==============================================
-                VISTA MÓVIL: TARJETAS (Visible solo en < md)
-               ============================================== */}
+            {/* VISTA MÓVIL */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
                 {usuarios.map(u => (
                     <div key={u.id} className="bg-surface border border-border rounded-xl p-5 shadow-sm relative overflow-hidden group">
@@ -58,6 +56,13 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
 
                         {/* --- BOTONES DE ACCIÓN MÓVIL --- */}
                         <div className="pl-14 flex gap-3 border-t border-border pt-3">
+                            {/* 2. Botón Nuevo Móvil */}
+                            <button 
+                                onClick={() => onVerPerfil(u.id)} 
+                                className="flex-1 bg-purple-500/10 text-purple-400 text-xs font-bold py-2 rounded hover:bg-purple-500/20 transition-colors"
+                            >
+                                👁️ PERFIL
+                            </button>
                             <button 
                                 onClick={() => onEditar(u)} 
                                 className="flex-1 bg-blue-500/10 text-blue-400 text-xs font-bold py-2 rounded hover:bg-blue-500/20 transition-colors"
@@ -75,9 +80,7 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
                 ))}
             </div>
 
-            {/* ==============================================
-                VISTA ESCRITORIO: TABLA (Visible solo en md+)
-               ============================================== */}
+            {/* VISTA ESCRITORIO */}
             <div className="hidden md:block bg-surface rounded-xl border border-border overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -86,7 +89,7 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
                                 <th className="p-6">Identidad del Socio</th>
                                 <th className="p-6">Canal de Comunicación</th>
                                 <th className="p-6">Rol</th>
-                                <th className="p-6 text-center">Acciones</th> {/* Nueva Columna */}
+                                <th className="p-6 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -106,9 +109,16 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar }) => {
                                             {u.rol}
                                         </span>
                                     </td>
-                                    {/* --- BOTONES DE ACCIÓN ESCRITORIO --- */}
                                     <td className="p-6 text-center">
                                         <div className="flex items-center justify-center gap-2">
+                                            {/* 3. Botón Nuevo Escritorio */}
+                                            <button 
+                                                onClick={() => onVerPerfil(u.id)}
+                                                className="p-2 hover:bg-purple-500/20 text-textMuted hover:text-purple-400 rounded-lg transition-all"
+                                                title="Ver Ficha Completa"
+                                            >
+                                                👁️
+                                            </button>
                                             <button 
                                                 onClick={() => onEditar(u)}
                                                 className="p-2 hover:bg-blue-500/20 text-textMuted hover:text-blue-400 rounded-lg transition-all"

@@ -32,6 +32,10 @@ public class ReservaService {
     private final CanchaRepository canchaRepository;
     private final PagoRepository pagoRepository;
 
+    // Constantes de negocio (Idealmente irían en application.properties)
+    private static final int HORA_APERTURA = 8;
+    private static final int HORA_CIERRE = 23;
+
     public List<ReservaDTO> obtenerTodas() {
         return reservaRepository.findAll().stream()
                 .map(this::convertirADto)
@@ -42,6 +46,10 @@ public class ReservaService {
     public List<ReservaDTO> guardarReserva(ReservaDTO dto) {
         log.info("Iniciando creación de reserva...");
 
+        // 1. Validaciones Básicas (Fecha, Hora, Pasado)
+        validarReglasDeHorario(dto.getFechaHora());
+
+        // 2. Validar Cancha
         Cancha cancha = canchaRepository.findById(dto.getCanchaId())
                 .orElseThrow(() -> new RuntimeException("Error: La cancha no existe."));
 
@@ -49,44 +57,29 @@ public class ReservaService {
             throw new RuntimeException("Esta cancha está en mantenimiento.");
         }
 
-        Usuario usuario = null;
-        String nombreFinal = dto.getNombreContacto();
-        String telefonoFinal = dto.getTelefonoContacto();
+        // 3. Validar Usuario o Invitado
+        Usuario usuario = resolveUsuario(dto);
 
-        if (dto.getUsuarioId() != null) {
-            usuario = usuarioRepository.findById(dto.getUsuarioId())
-                    .orElseThrow(() -> new RuntimeException("Error: El usuario no existe."));
-        } else {
-            if (dto.getNombreContacto() == null || dto.getNombreContacto().trim().isEmpty()) {
-                throw new RuntimeException("Debe ingresar el Nombre del invitado.");
-            }
-            if (dto.getTelefonoContacto() == null || dto.getTelefonoContacto().trim().isEmpty()) {
-                throw new RuntimeException("Debe ingresar un Teléfono.");
-            }
-        }
-
-        if (dto.getFechaHora().getMinute() != 0) {
-            throw new RuntimeException("Los turnos deben comenzar en hora en punto.");
-        }
-        int hora = dto.getFechaHora().getHour();
-        if (hora < 9 || hora > 22) {
-            throw new RuntimeException("El club está cerrado.");
-        }
-
+        // 4. Lógica de Turno Fijo / Repetición
         int semanas = (dto.getRepetirSemanas() == null || dto.getRepetirSemanas() < 1) ? 1 : dto.getRepetirSemanas();
         String codigoGrupo = (semanas > 1) ? UUID.randomUUID().toString() : null;
 
+        // 5. Verificación de Disponibilidad (ATÓMICA: Chequear TODO antes de guardar
+        // NADA)
         for (int i = 0; i < semanas; i++) {
             LocalDateTime fechaChequeo = dto.getFechaHora().plusWeeks(i);
-            boolean ocupada = reservaRepository.existsByCanchaIdAndFechaHora(dto.getCanchaId(), fechaChequeo);
-            if (ocupada) {
-                throw new RuntimeException("Conflicto: La fecha " + fechaChequeo.toString() + " ocupada.");
+
+            // Usamos el repositorio para detectar conflictos
+            if (reservaRepository.existsByCanchaIdAndFechaHora(dto.getCanchaId(), fechaChequeo)) {
+                throw new RuntimeException(
+                        "Conflicto: La cancha ya está reservada para el día " + fechaChequeo.toString());
             }
         }
 
+        // 6. Persistencia
         BigDecimal precioInicial = (dto.getPrecio() != null) ? dto.getPrecio() : new BigDecimal("2000.00");
-
         List<Reserva> reservasCreadas = new ArrayList<>();
+
         for (int i = 0; i < semanas; i++) {
             LocalDateTime fechaFinal = dto.getFechaHora().plusWeeks(i);
 
@@ -97,33 +90,68 @@ public class ReservaService {
             reserva.setCancha(cancha);
             reserva.setCodigoTurnoFijo(codigoGrupo);
             reserva.setPrecioPactado(precioInicial);
-            
+
             if (usuario != null) {
                 reserva.setUsuario(usuario);
             } else {
-                reserva.setNombreContacto(nombreFinal);
-                reserva.setTelefonoContacto(telefonoFinal);
+                reserva.setNombreContacto(dto.getNombreContacto());
+                reserva.setTelefonoContacto(dto.getTelefonoContacto());
             }
 
             reservasCreadas.add(reservaRepository.save(reserva));
         }
-        
+
         return reservasCreadas.stream().map(this::convertirADto).toList();
     }
+
+    // --- MÉTODOS PRIVADOS DE VALIDACIÓN (CLEAN CODE) ---
+
+    private void validarReglasDeHorario(LocalDateTime fechaHora) {
+        // Regla 1: No viajar al pasado
+        if (fechaHora.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("No se pueden crear reservas en el pasado.");
+        }
+
+        // Regla 2: Turnos en punto (Simplificación actual)
+        if (fechaHora.getMinute() != 0) {
+            throw new RuntimeException("Los turnos deben comenzar en hora en punto (ej: 18:00, no 18:30).");
+        }
+
+        // Regla 3: Horario del Club
+        int hora = fechaHora.getHour();
+        if (hora < HORA_APERTURA || hora >= HORA_CIERRE) {
+            throw new RuntimeException(
+                    "El club está cerrado. Horario de atención: " + HORA_APERTURA + "hs a " + HORA_CIERRE + "hs.");
+        }
+    }
+
+    private Usuario resolveUsuario(ReservaDTO dto) {
+        if (dto.getUsuarioId() != null) {
+            return usuarioRepository.findById(dto.getUsuarioId())
+                    .orElseThrow(() -> new RuntimeException("Error: El usuario no existe."));
+        } else {
+            // Es invitado, validamos datos de contacto
+            if (dto.getNombreContacto() == null || dto.getNombreContacto().trim().isEmpty()) {
+                throw new RuntimeException("Debe ingresar el Nombre del invitado.");
+            }
+            if (dto.getTelefonoContacto() == null || dto.getTelefonoContacto().trim().isEmpty()) {
+                throw new RuntimeException("Debe ingresar un Teléfono.");
+            }
+            return null;
+        }
+    }
+
+    // --- MÉTODOS DE PAGO Y OTROS (Sin cambios mayores, solo mantenidos) ---
 
     @Transactional
     public ReservaDTO registrarPago(Long reservaId, BigDecimal monto, MetodoPago metodo, String observacion) {
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
 
-        // --- VALIDACIÓN DE SEGURIDAD FINANCIERA ---
-        // Impedimos que se pague más de lo que se debe.
         BigDecimal saldoActual = reserva.getSaldoPendiente();
         if (monto.compareTo(saldoActual) > 0) {
-            throw new RuntimeException("Error: El monto ingresado ($" + monto + 
-                                     ") supera el saldo pendiente ($" + saldoActual + ").");
+            throw new RuntimeException("Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
         }
-        // ------------------------------------------
 
         Pago pago = new Pago();
         pago.setMonto(monto);
@@ -133,27 +161,28 @@ public class ReservaService {
         pago.setReserva(reserva);
 
         pagoRepository.save(pago);
+        reserva.getPagos().add(pago);
 
-        reserva.getPagos().add(pago); 
-        
+        // Actualizamos estado de pago
         if (reserva.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
             reserva.setPagado(true);
         } else {
             reserva.setPagado(false);
         }
-        
+
         return convertirADto(reservaRepository.save(reserva));
     }
 
     public void cancelarReserva(Long id) {
-        if (!reservaRepository.existsById(id)) throw new RuntimeException("Reserva no encontrada.");
+        if (!reservaRepository.existsById(id))
+            throw new RuntimeException("Reserva no encontrada.");
         reservaRepository.deleteById(id);
     }
 
     public void cancelarTurnoFijo(String codigo) {
         reservaRepository.deleteByCodigoTurnoFijo(codigo);
     }
-    
+
     public ReservaDTO togglePago(Long id) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
@@ -171,10 +200,8 @@ public class ReservaService {
         dto.setFechaHora(reserva.getFechaHora());
         dto.setEstado(reserva.getEstado());
         dto.setPagado(reserva.getPagado());
-        
         dto.setPrecio(reserva.getPrecioPactado());
         dto.setSaldoPendiente(reserva.getSaldoPendiente());
-
         dto.setCanchaId(reserva.getCancha().getId());
         dto.setNombreCancha(reserva.getCancha().getNombre());
         dto.setCodigoTurnoFijo(reserva.getCodigoTurnoFijo());
@@ -188,7 +215,7 @@ public class ReservaService {
             dto.setUsuarioId(null);
             dto.setNombreUsuario(reserva.getNombreContacto() + " (Inv)");
         }
-        
+
         return dto;
     }
 }

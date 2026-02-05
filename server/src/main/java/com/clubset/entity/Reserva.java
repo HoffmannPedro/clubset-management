@@ -26,8 +26,6 @@ public class Reserva {
     private Boolean pagado = false; 
     
     // NUEVO: Precio pactado al momento de reservar.
-    // Si no lo guardas aquí, y cambias el precio de la cancha mañana,
-    // cobrarás mal las reservas antiguas.
     @Column(precision = 10, scale = 2)
     private BigDecimal precioPactado;
 

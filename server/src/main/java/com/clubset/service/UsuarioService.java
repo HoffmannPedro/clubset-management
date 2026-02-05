@@ -3,11 +3,16 @@ package com.clubset.service;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder; // <--- 1. NUEVO IMPORT
 
+import com.clubset.dto.ReservaDTO;
 import com.clubset.dto.UsuarioDTO;
+import com.clubset.entity.Reserva;
 import com.clubset.entity.Usuario;
+import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -15,7 +20,8 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder; // <--- 2. INYECCIÓN DEL ENCRIPTADOR
+    private final PasswordEncoder passwordEncoder;
+    private final ReservaRepository reservaRepository;
 
     public List<UsuarioDTO> obtenerTodosLosUsuarios() {
         return usuarioRepository.findAll().stream()
@@ -72,16 +78,45 @@ public class UsuarioService {
         dto.setNombre(usuario.getNombre());
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
-        dto.setTelefono(usuario.getTelefono()); // Nuevo
+        dto.setTelefono(usuario.getTelefono());
         dto.setRol(usuario.getRol());
-        
-        // Mapeo deportivo
         dto.setCategoria(usuario.getCategoria());
         dto.setGenero(usuario.getGenero());
         dto.setManoHabil(usuario.getManoHabil());
-        dto.setFotoPerfilUrl(usuario.getFotoPerfilUrl());
         dto.setPuntosRanking(usuario.getPuntosRanking());
         
+        // --- 1. CÁLCULO DE DEUDA (CORREGIDO) ---
+        // Traemos las reservas impagas
+        List<Reserva> reservasImpagas = reservaRepository.findByUsuarioIdAndPagadoFalse(usuario.getId());
+        
+        // Sumamos el saldo pendiente de cada una usando Java
+        // (Esto asume que tu entidad Reserva tiene el método getSaldoPendiente())
+        BigDecimal deuda = reservasImpagas.stream()
+                .map(Reserva::getSaldoPendiente) 
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        dto.setDeudaTotal(deuda);
+        // ---------------------------------------
+
+        // 2. Estadísticas
+        dto.setPartidosJugados(reservaRepository.countByUsuarioId(usuario.getId()));
+
+        // 3. Historial
+        List<Reserva> ultimas = reservaRepository.findTop5ByUsuarioIdOrderByFechaHoraDesc(usuario.getId());
+        
+        List<ReservaDTO> historialDtos = ultimas.stream().map(r -> {
+            ReservaDTO rDto = new ReservaDTO();
+            rDto.setId(r.getId());
+            rDto.setFechaHora(r.getFechaHora());
+            rDto.setNombreCancha(r.getCancha().getNombre());
+            rDto.setPagado(r.getPagado());
+            rDto.setSaldoPendiente(r.getSaldoPendiente());
+            rDto.setEstado(r.getEstado());
+            return rDto;
+        }).toList();
+        
+        dto.setUltimasReservas(historialDtos);
+
         return dto;
     }
 }

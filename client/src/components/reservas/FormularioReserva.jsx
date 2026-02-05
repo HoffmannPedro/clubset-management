@@ -1,6 +1,6 @@
 import { useReservaForm } from '../../hooks/useReservaForm'; // <--- Importamos el cerebro
 
-const FormularioReserva = ({ onReservaCreada }) => {
+const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
     // Extraemos todo lo que necesitamos del Hook
     const {
         formData,
@@ -10,7 +10,7 @@ const FormularioReserva = ({ onReservaCreada }) => {
         handleChange,
         setModo,
         handleSubmit
-    } = useReservaForm(onReservaCreada);
+    } = useReservaForm(onReservaCreada, preseleccion);
 
     const { modoReserva, usuarioId, nombreContacto, telefonoContacto, canchaId, fecha, hora, repetirSemanas } = formData;
 

@@ -1,7 +1,7 @@
 import { useGrillaReservas } from '../../hooks/useGrillaReservas';
 
-const GrillaReservas = ({ refreshKey }) => {
-    // Toda la magia viene de aquí ⬇️
+const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
+    
     const {
         canchas,
         horas,
@@ -39,8 +39,13 @@ const GrillaReservas = ({ refreshKey }) => {
                             </th>
                             {canchas.map(c => (
                                 <th key={c.id} className="p-4 bg-background border-b border-border text-center min-w-[140px]">
-                                    <p className="text-primary font-black uppercase text-sm whitespace-nowrap">{c.nombre}</p>
-                                    <p className="text-[10px] text-textMuted font-bold truncate px-2">{c.superficie}</p>
+                                    <div className="flex flex-col items-center">
+                                        <p className={`font-black uppercase text-sm whitespace-nowrap ${c.disponible ? 'text-primary' : 'text-red-500 line-through'}`}>
+                                            {c.nombre}
+                                        </p>
+                                        <p className="text-[10px] text-textMuted font-bold truncate px-2">{c.superficie}</p>
+                                        {!c.disponible && <span className="text-[9px] bg-red-500 text-white px-1 rounded uppercase mt-1">Mantenimiento</span>}
+                                    </div>
                                 </th>
                             ))}
                         </tr>
@@ -53,10 +58,28 @@ const GrillaReservas = ({ refreshKey }) => {
                                 </td>
 
                                 {canchas.map(c => {
+                                    
+                                    // 🛑 1. BLOQUEO POR MANTENIMIENTO
+                                    // Si la cancha NO está disponible, renderizamos celda muerta inmediatamente.
+                                    if (!c.disponible) {
+                                        return (
+                                            <td key={`${c.id}-${hora}`} className="p-1 border-b border-border border-dashed h-[60px] bg-background/50">
+                                                <div className="h-full w-full flex items-center justify-center border border-transparent rounded-lg cursor-not-allowed opacity-40 select-none">
+                                                    <span className="text-[10px] font-black text-textMuted uppercase -rotate-12 whitespace-nowrap">
+                                                        ⛔ Cerrada
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        );
+                                    }
+
+                                    // Si pasa el chequeo, buscamos si hay reserva
                                     const reserva = buscarReserva(c.id, hora);
+                                    
                                     return (
                                         <td key={`${c.id}-${hora}`} className="p-1 border-b border-border border-dashed h-[60px]">
                                             {reserva ? (
+                                                /* --- RESERVA OCUPADA --- */
                                                 <div 
                                                     onClick={() => handleReservaClick(reserva)}
                                                     className={`
@@ -69,28 +92,23 @@ const GrillaReservas = ({ refreshKey }) => {
                                                         }
                                                     `}
                                                 >
-                                                    {/* Indicadores flotantes */}
-                                                    {reserva.codigoTurnoFijo && (
-                                                        <div className="absolute top-0.5 right-1 text-[8px] opacity-50">🔁</div>
-                                                    )}
-                                                    
-                                                    {/* Contenido Texto */}
+                                                    {reserva.codigoTurnoFijo && <div className="absolute top-0.5 right-1 text-[8px] opacity-50">🔁</div>}
                                                     <div className="w-full px-2 overflow-hidden pointer-events-none">
                                                         <p className="uppercase truncate text-[10px] leading-tight">{reserva.nombreUsuario}</p>
                                                         <p className="hidden sm:block text-[8px] opacity-70 mt-0.5">
-                                                            {reserva.pagado 
-                                                                ? '✅ PAGADO' 
-                                                                : (reserva.saldoPendiente > 0 ? `Deb: $${reserva.saldoPendiente}` : 'PENDIENTE')
-                                                            }
+                                                            {reserva.pagado ? '✅ PAGADO' : (reserva.saldoPendiente > 0 ? `Deb: $${reserva.saldoPendiente}` : 'PENDIENTE')}
                                                         </p>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="text-center h-full flex items-center justify-center opacity-20 hover:opacity-100 transition-opacity">
-                                                    <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-border hover:text-primary cursor-pointer">
-                                                        Disponible
+                                                /* --- ESPACIO VACÍO (DISPONIBLE) --- */
+                                                <div 
+                                                    onClick={() => onEmptySlotClick(c.id, hora, fechaSeleccionada)}
+                                                    className="h-full w-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer group"
+                                                >
+                                                    <span className="bg-primary/20 text-primary px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider backdrop-blur-sm border border-primary/30">
+                                                        + Reservar
                                                     </span>
-                                                    <span className="sm:hidden text-2xl text-border hover:text-primary leading-none">•</span>
                                                 </div>
                                             )}
                                         </td>

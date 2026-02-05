@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { getUsuarios } from '../services/usuarioService';
 import { getCanchas } from '../services/canchaService';
-import { crearReserva } from '../services/reservaService';
+import { crearReserva } from '../services/reservaService'; // <--- Usamos tu función correcta
 import { mostrarAlerta } from '../utils/alertas';
 
-export const useReservaForm = (onReservaCreada) => {
+// Aceptamos el nuevo parámetro 'dataPreseleccionada'
+export const useReservaForm = (onReservaCreada, dataPreseleccionada) => {
+    
     // 1. ESTADOS
     const [usuarios, setUsuarios] = useState([]);
     const [canchas, setCanchas] = useState([]);
 
-    // Form Data
     const [formData, setFormData] = useState({
         modoReserva: 'SOCIO',
         usuarioId: '',
@@ -21,7 +22,7 @@ export const useReservaForm = (onReservaCreada) => {
         repetirSemanas: 1
     });
 
-    // 2. CARGA DE DATOS
+    // 2. CARGA DE DATOS (Mantenemos igual)
     useEffect(() => {
         const cargarDatos = async () => {
             try {
@@ -30,7 +31,6 @@ export const useReservaForm = (onReservaCreada) => {
                     getCanchas()
                 ]);
                 setUsuarios(listaUsuarios);
-                // Filtramos solo disponibles
                 setCanchas(listaCanchas.filter(c => c.disponible));
             } catch (error) {
                 console.error("Error cargando datos:", error);
@@ -40,7 +40,21 @@ export const useReservaForm = (onReservaCreada) => {
         cargarDatos();
     }, []);
 
-    // 3. HANDLERS (Manejadores de cambios)
+    // --- NUEVO: EFECTO PARA AUTOCOMPLETAR ---
+    // Si dataPreseleccionada cambia (click en grilla), actualizamos el form
+    useEffect(() => {
+        if (dataPreseleccionada) {
+            setFormData(prev => ({
+                ...prev,
+                canchaId: dataPreseleccionada.canchaId,
+                fecha: dataPreseleccionada.fecha,
+                hora: dataPreseleccionada.hora
+            }));
+        }
+    }, [dataPreseleccionada]);
+    // ----------------------------------------
+
+    // 3. HANDLERS (Mantenemos igual)
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -50,7 +64,7 @@ export const useReservaForm = (onReservaCreada) => {
         setFormData(prev => ({
             ...prev,
             modoReserva: modo,
-            usuarioId: '',        // Limpiamos al cambiar
+            usuarioId: '',
             nombreContacto: '',
             telefonoContacto: ''
         }));
@@ -61,7 +75,6 @@ export const useReservaForm = (onReservaCreada) => {
         e.preventDefault();
         const { canchaId, fecha, hora, modoReserva, usuarioId, nombreContacto, telefonoContacto, repetirSemanas } = formData;
 
-        // Validaciones
         if (!canchaId || !fecha || !hora) {
             mostrarAlerta('Faltan Datos', 'Selecciona cancha, fecha y hora.', 'warning');
             return;
@@ -75,7 +88,6 @@ export const useReservaForm = (onReservaCreada) => {
             return;
         }
 
-        // Formateo
         const horaFormateada = hora.toString().padStart(2, '0');
         const fechaHoraISO = `${fecha}T${horaFormateada}:00:00`;
 
@@ -89,25 +101,28 @@ export const useReservaForm = (onReservaCreada) => {
                 telefonoContacto: modoReserva === 'INVITADO' ? telefonoContacto : null
             };
 
-            await crearReserva(payload);
+            await crearReserva(payload); // <--- Tu función original
 
             const msg = parseInt(repetirSemanas) > 1
                 ? `Turno fijo generado por ${repetirSemanas} semanas.`
                 : "Reserva registrada correctamente.";
             mostrarAlerta('¡Éxito!', msg, 'success');
 
-            // Limpieza inteligente (Mantenemos fecha/cancha por si quiere seguir cargando)
             setFormData(prev => ({ ...prev, usuarioId: '', nombreContacto: '', telefonoContacto: '' }));
 
             if (onReservaCreada) onReservaCreada();
 
         } catch (error) {
             console.error(error);
-            mostrarAlerta('Error', 'No se pudo crear la reserva.', 'error');
+            // MEJORA: Intentamos leer el mensaje del backend si existe
+            const mensajeBackend = error.response?.data || 'No se pudo crear la reserva.';
+            // A veces el backend manda un objeto, a veces un string. Nos aseguramos de mostrar texto.
+            const mensajeFinal = typeof mensajeBackend === 'string' ? mensajeBackend : JSON.stringify(mensajeBackend);
+            
+            mostrarAlerta('Atención', mensajeFinal, 'error');
         }
     };
 
-    // 5. HELPER PARA HORARIOS
     const horariosDisponibles = Array.from({ length: 14 }, (_, i) => {
         const h = i + 9;
         return { valor: h, etiqueta: `${h < 10 ? '0' + h : h}:00 hs` };
