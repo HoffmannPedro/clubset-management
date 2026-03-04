@@ -17,7 +17,9 @@ import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +40,16 @@ public class ReservaService {
 
     public List<ReservaDTO> obtenerTodas() {
         return reservaRepository.findAll().stream()
+                .map(this::convertirADto)
+                .toList();
+    }
+
+    public List<ReservaDTO> obtenerPorFecha(LocalDate fecha) {
+        // Creamos el rango del día: desde las 00:00 hasta las 23:59:59
+        LocalDateTime inicioDia = fecha.atStartOfDay();
+        LocalDateTime finDia = fecha.atTime(LocalTime.MAX);
+
+        return reservaRepository.findByFechaHoraBetween(inicioDia, finDia).stream()
                 .map(this::convertirADto)
                 .toList();
     }
@@ -158,12 +170,12 @@ public class ReservaService {
         pago.setMetodoPago(metodo);
         pago.setFechaPago(LocalDateTime.now());
         pago.setObservacion(observacion);
+        pago.setTipoMovimiento("INGRESO"); // Aseguramos que es un ingreso
         pago.setReserva(reserva);
 
         pagoRepository.save(pago);
         reserva.getPagos().add(pago);
 
-        // Actualizamos estado de pago
         if (reserva.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
             reserva.setPagado(true);
         } else {

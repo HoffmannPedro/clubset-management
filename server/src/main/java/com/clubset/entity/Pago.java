@@ -3,7 +3,7 @@ package com.clubset.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.clubset.enums.MetodoPago; // Asegúrate de importar el Enum
+import com.clubset.enums.MetodoPago;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -16,7 +16,6 @@ public class Pago {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Usamos BigDecimal para dinero. Double tiene problemas de precisión en finanzas.
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal monto;
 
@@ -26,9 +25,16 @@ public class Pago {
 
     private LocalDateTime fechaPago;
     
-    private String observacion; // Ej: "Pago de seña", "Comprobante #1234"
+    private String observacion;
 
+    // --- NUEVO: ¿Entra o sale plata? ---
+    // Usamos String por simplicidad ("INGRESO" o "EGRESO")
+    
+    private String tipoMovimiento = "INGRESO";
+
+    // --- EL CAMBIO CLAVE: nullable = true ---
+    // Ahora un pago puede existir sin estar atado a un partido
     @ManyToOne
-    @JoinColumn(name = "reserva_id", nullable = false)
+    @JoinColumn(name = "reserva_id", nullable = true)
     private Reserva reserva;
 }

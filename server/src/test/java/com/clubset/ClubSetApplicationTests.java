@@ -1,10 +1,10 @@
-package com.ladividida.la_dividida;
+package com.clubset;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class LaDivididaApplicationTests {
+class ClubSetApplicationTests {
 
 	@Test
 	void contextLoads() {

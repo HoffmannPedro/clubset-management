@@ -1,57 +1,134 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getPagosDiarios } from '../../services/reservaService';
+import { getPagosDiarios } from '../../services/pagoService';
+// Nuevos imports para traer datos reales
+import { getUsuarios } from '../../services/usuarioService';
+import { getCanchas } from '../../services/canchaService';
+import { getReservasByFecha } from '../../services/reservaService'; // Usamos getReservas y filtramos en front para no complicar el back ahora
 
 const DashboardView = ({ setActiveTab }) => {
+    // Estados para los datos
     const [pagosDelDia, setPagosDelDia] = useState([]);
-    
-    // Al montar, buscamos los pagos de HOY para el widget financiero
+    const [totalSocios, setTotalSocios] = useState(0);
+    const [canchasActivas, setCanchasActivas] = useState(0);
+    const [reservasHoy, setReservasHoy] = useState([]);
+    const [cargando, setCargando] = useState(true);
+
+    // Al montar, disparamos todas las peticiones en paralelo
     useEffect(() => {
-        const fetchPagosHoy = async () => {
+        const fetchDatosDashboard = async () => {
+            setCargando(true);
             try {
-                const hoy = new Date().toISOString().split('T')[0];
-                const datos = await getPagosDiarios(hoy);
-                setPagosDelDia(datos);
+                const hoyStr = new Date().toISOString().split('T')[0];
+
+                // Promesas en paralelo para mayor velocidad
+                const [pagos, usuarios, canchas, reservas] = await Promise.all([
+                    getPagosDiarios(hoyStr).catch(() => []), // Si falla una, no rompe el resto
+                    getUsuarios().catch(() => []),
+                    getCanchas().catch(() => []),
+                    getReservasByFecha(hoyStr).catch(() => [])
+                ]);
+
+                // 1. Pagos
+                setPagosDelDia(pagos);
+
+                // 2. Socios
+                setTotalSocios(usuarios.length);
+
+                // 3. Canchas (solo las disponibles)
+                setCanchasActivas(canchas.filter(c => c.disponible).length);
+
+                // 4. Reservas (Filtramos solo las de HOY y ordenamos por hora)
+                const reservasDeHoy = reservas
+                    .filter(r => r.fechaHora.startsWith(hoyStr))
+                    .sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+
+                setReservasHoy(reservasDeHoy);
+
             } catch (error) {
-                console.error("Error cargando widget caja:", error);
+                console.error("Error cargando dashboard:", error);
+            } finally {
+                setCargando(false);
             }
         };
-        fetchPagosHoy();
+
+        fetchDatosDashboard();
     }, []);
 
     // Calculamos totales en vivo
     const resumenFinanciero = useMemo(() => {
-        const total = pagosDelDia.reduce((acc, p) => acc + p.monto, 0);
-        const efectivo = pagosDelDia.filter(p => p.metodoPago === 'EFECTIVO').reduce((acc, p) => acc + p.monto, 0);
-        const digital = total - efectivo;
+        let ingresos = 0;
+        let egresos = 0;
+        let efectivo = 0;
+        let digital = 0;
+
+        pagosDelDia.forEach(p => {
+            const esIngreso = p.tipoMovimiento !== 'EGRESO';
+            const monto = parseFloat(p.monto);
+
+            if (esIngreso) {
+                ingresos += monto;
+                if (p.metodoPago === 'EFECTIVO') efectivo += monto;
+                else digital += monto;
+            } else {
+                egresos += monto;
+                if (p.metodoPago === 'EFECTIVO') efectivo -= monto;
+                else digital -= monto;
+            }
+        });
+
+        const total = ingresos - egresos;
         return { total, efectivo, digital };
     }, [pagosDelDia]);
 
+    if (cargando) {
+        return <div className="p-10 text-center text-textMuted animate-pulse font-bold tracking-widest uppercase">Generando Reporte...</div>;
+    }
+
     return (
         <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
-            <h2 className="text-2xl font-black italic mb-6">Bienvenido al Panel</h2>
 
+            <div className="flex justify-between items-end mb-6 border-b border-border pb-4">
+                <div>
+                    <h2 className="text-2xl font-black italic">Resumen Operativo</h2>
+                    <p className="text-xs text-textMuted font-bold uppercase tracking-widest">Actividad en Tiempo Real</p>
+                </div>
+                <div className="text-right hidden sm:block">
+                    <p className="text-xs text-primary font-bold uppercase tracking-widest">{new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                </div>
+            </div>
+
+            {/* --- WIDGETS SUPERIORES --- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {/* Widget 1: Socios (Estático por ahora) */}
-                <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg hover:scale-[1.02] transition-transform">
-                    <p className="text-textMuted text-xs font-bold uppercase mb-2">Total Socios</p>
-                    <p className="text-3xl md:text-4xl font-black text-secondary">42</p>
+
+                {/* Widget 1: Socios */}
+                <div
+                    onClick={() => setActiveTab('usuarios')}
+                    className="bg-surface p-6 rounded-2xl border border-border shadow-lg hover:scale-[1.02] hover:border-secondary/50 transition-all cursor-pointer group"
+                >
+                    <p className="text-textMuted text-xs font-bold uppercase mb-2 group-hover:text-secondary transition-colors">Total Socios</p>
+                    <p className="text-3xl md:text-4xl font-black text-text">{totalSocios}</p>
                 </div>
 
-                {/* Widget 2: Canchas (Estático por ahora) */}
-                <div className="bg-surface p-6 rounded-2xl border border-border shadow-lg hover:scale-[1.02] transition-transform text-primary">
-                    <p className="text-textMuted text-xs font-bold uppercase mb-2">Canchas Activas</p>
-                    <p className="text-3xl md:text-4xl font-black">08</p>
+                {/* Widget 2: Canchas */}
+                <div
+                    onClick={() => setActiveTab('canchas')}
+                    className="bg-surface p-6 rounded-2xl border border-border shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all cursor-pointer group"
+                >
+                    <p className="text-textMuted text-xs font-bold uppercase mb-2 group-hover:text-primary transition-colors">Canchas Activas</p>
+                    <p className="text-3xl md:text-4xl font-black text-text">
+                        {canchasActivas} <span className="text-xs font-normal text-textMuted">disponibles</span>
+                    </p>
                 </div>
 
-                {/* Widget 3: CAJA (Dinámico) - Clickeable para ir a la sección Caja */}
-                <div 
-                    className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg relative overflow-hidden group cursor-pointer hover:border-green-500/50 transition-all hover:scale-[1.02]" 
+                {/* Widget 3: CAJA */}
+                <div
+                    className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg relative overflow-hidden group cursor-pointer hover:border-green-500/50 transition-all hover:scale-[1.02]"
                     onClick={() => setActiveTab('caja')}
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <span className="text-6xl">💵</span>
                     </div>
-                    <p className="text-green-400 text-xs font-bold uppercase mb-2">Caja Hoy ({new Date().toLocaleDateString()})</p>
+                    <p className="text-green-400 text-xs font-bold uppercase mb-2 group-hover:text-white transition-colors">Caja Hoy</p>
                     <p className="text-3xl md:text-4xl font-black text-white tracking-tight">
                         ${resumenFinanciero.total.toLocaleString()}
                     </p>
@@ -62,11 +139,71 @@ const DashboardView = ({ setActiveTab }) => {
                 </div>
             </div>
 
-            <div className="bg-surface/30 p-8 md:p-12 rounded-3xl border border-dashed border-border text-center">
-                <p className="text-textMuted italic text-sm md:text-base">
-                    Panel optimizado para móvil y escritorio.
-                </p>
+            {/* --- SECCIÓN INFERIOR: PRÓXIMOS TURNOS --- */}
+            <div className="bg-surface rounded-2xl border border-border shadow-xl overflow-hidden">
+                <div className="p-6 border-b border-border flex justify-between items-center bg-background/30">
+                    <h3 className="text-lg font-black text-text italic flex items-center gap-2">
+                        <span>🎾</span> Agenda del Día
+                    </h3>
+                    <button
+                        onClick={() => setActiveTab('reservas')}
+                        className="text-xs font-bold uppercase tracking-widest text-primary hover:text-white transition-colors"
+                    >
+                        Ver Grilla Completa →
+                    </button>
+                </div>
+
+                {reservasHoy.length === 0 ? (
+                    <div className="p-12 text-center border-t border-border/50 bg-background/10">
+                        <p className="text-textMuted text-sm font-bold uppercase tracking-widest">No hay reservas para el día de hoy.</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="text-[10px] text-textMuted uppercase font-black bg-background/50 border-b border-border tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4">Horario</th>
+                                    <th className="px-6 py-4">Cancha</th>
+                                    <th className="px-6 py-4">Titular</th>
+                                    <th className="px-6 py-4 text-right">Estado de Pago</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {reservasHoy.map(reserva => {
+                                    const horaFormateada = new Date(reserva.fechaHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                    return (
+                                        <tr key={reserva.id} className="hover:bg-background/40 transition-colors group">
+                                            <td className="px-6 py-4 font-black text-text text-lg">{horaFormateada}</td>
+                                            <td className="px-6 py-4 font-bold text-primary uppercase text-sm">{reserva.nombreCancha}</td>
+                                            <td className="px-6 py-4 font-bold text-text text-sm">
+                                                {reserva.nombreUsuario}
+                                                {reserva.codigoTurnoFijo && <span className="ml-2 text-[10px] bg-secondary/20 text-secondary px-2 py-0.5 rounded uppercase">Fijo</span>}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {reserva.pagado ? (
+                                                    <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-green-500/10 text-green-500 border border-green-500/20 shadow-sm">
+                                                        ✅ Pagado
+                                                    </span>
+                                                ) : (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-red-500/10 text-red-500 border border-red-500/20 shadow-sm">
+                                                            Debe ${reserva.saldoPendiente}
+                                                        </span>
+                                                        <span className="text-[9px] text-textMuted uppercase font-bold tracking-widest mt-1 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Cobrar en recepción
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
+
         </div>
     );
 };

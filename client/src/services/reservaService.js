@@ -6,6 +6,12 @@ export const getReservas = async () => {
     return response.data;
 };
 
+// GET: Traer todas las reservas por fecha
+export const getReservasByFecha = async (fecha) => {
+    const response = await api.get(`/reservas/fecha/${fecha}`);
+    return response.data;
+};
+
 // POST: Crear una nueva reserva
 export const crearReserva = async (reservaNueva) => {
     const response = await api.post('/reservas', reservaNueva);
@@ -30,12 +36,6 @@ export const registrarPago = async (id, datosPago) => {
     const response = await api.post(`/reservas/${id}/pagos`, datosPago);
     return response.data;
 };
-
-// Obtener pagos diarios
-export const getPagosDiarios = async (fecha) => {
-    const response = await api.get(`/pagos/diarios?fecha=${fecha}`)
-    return response.data;
-}
 
 // Mantenemos por compatibilidad (opcional)
 export const togglePago = async (id) => {

@@ -1,6 +1,6 @@
 package com.clubset.controller;
 
-import lombok.Data; // Necesario para la clase interna
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -8,9 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import com.clubset.dto.ReservaDTO;
 import com.clubset.service.ReservaService;
-import com.clubset.enums.MetodoPago; // Asegúrate de importar esto
+import com.clubset.enums.MetodoPago;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,6 +25,12 @@ public class ReservaController {
     @GetMapping
     public List<ReservaDTO> listar() {
         return reservaService.obtenerTodas();
+    }
+
+    @GetMapping("/fecha/{fecha}")
+    public List<ReservaDTO> listarPorFecha(@PathVariable String fecha) {
+        // Parseamos a LocalDate (ej: "2026-02-26")
+        return reservaService.obtenerPorFecha(LocalDate.parse(fecha));
     }
 
     @PostMapping
@@ -65,8 +72,6 @@ public class ReservaController {
         }
     }
 
-    // --- NUEVO ENDPOINT DE CAJA ---
-    // Recibe un JSON como: { "monto": 500, "metodoPago": "EFECTIVO", "observacion": "Seña" }
     @PostMapping("/{id}/pagos")
     public ResponseEntity<?> registrarPago(@PathVariable Long id, @RequestBody PagoRequest request) {
         try {
