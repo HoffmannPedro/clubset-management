@@ -54,7 +54,7 @@ const VistaListaReservas = ({ reservas, fechaSeleccionada, setFechaSeleccionada,
             {/* TABLA DE RESULTADOS */}
             <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-xl">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full min-w-max text-left text-sm">
                         <thead className="text-xs text-textMuted uppercase bg-background font-black border-b border-border">
                             <tr>
                                 <th className="px-6 py-4">Día y Hora</th>
@@ -72,21 +72,21 @@ const VistaListaReservas = ({ reservas, fechaSeleccionada, setFechaSeleccionada,
                                         onClick={() => handleReservaClick(reserva)}
                                         className="hover:bg-white/5 transition-colors cursor-pointer group"
                                     >
-                                        <td className="px-6 py-4 font-bold">
+                                        <td className="px-4 sm:px-6 py-4 font-bold whitespace-nowrap">
                                             {new Date(reserva.fechaHora).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })}
                                             <span className="text-primary ml-2 bg-primary/10 px-2 py-1 rounded">
                                                 {new Date(reserva.fechaHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}hs
                                             </span>
                                             {reserva.codigoTurnoFijo && <span className="ml-2 text-[10px] text-textMuted" title="Turno Fijo">🔁</span>}
                                         </td>
-                                        <td className="px-6 py-4 font-bold uppercase">{reserva.nombreCancha}</td>
-                                        <td className="px-6 py-4 text-textMuted">{reserva.nombreUsuario}</td>
-                                        <td className="px-6 py-4 text-center">
+                                        <td className="px-4 sm:px-6 py-4 font-bold uppercase whitespace-nowrap">{reserva.nombreCancha}</td>
+                                        <td className="px-4 sm:px-6 py-4 text-textMuted whitespace-nowrap">{reserva.nombreUsuario}</td>
+                                        <td className="px-4 sm:px-6 py-4 text-center whitespace-nowrap">
                                             <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${reserva.pagado ? 'bg-green-500/10 text-green-500 border-green-500/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
                                                 {reserva.pagado ? 'Saldado' : 'Deudor'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-mono font-bold">
+                                        <td className="px-4 sm:px-6 py-4 text-right font-mono font-bold whitespace-nowrap">
                                             {reserva.saldoPendiente > 0 ? `$${reserva.saldoPendiente}` : '-'}
                                         </td>
                                     </tr>

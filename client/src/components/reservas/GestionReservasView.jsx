@@ -28,22 +28,22 @@ const GestionReservasView = ({ refreshKey, onReservaExitosa, preseleccion, onEmp
         <div className="space-y-6 animate-in slide-in-from-bottom-4">
             
             {/* Navegación de Sub-pestañas (TABS) */}
-            <div className="flex bg-surface p-2 rounded-2xl border border-border shadow-sm overflow-x-auto hide-scrollbar">
+            <div className="flex bg-surface p-2 rounded-2xl border border-border shadow-sm overflow-x-auto hide-scrollbar snap-x flex-nowrap gap-2">
                 <button 
                     onClick={() => setSubTabActiva('GRILLA')}
-                    className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${subTabActiva === 'GRILLA' ? 'bg-primary/20 text-primary shadow-sm border border-primary/30' : 'text-textMuted hover:text-white hover:bg-white/5'}`}
+                    className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0 snap-start ${subTabActiva === 'GRILLA' ? 'bg-primary/20 text-primary shadow-sm border border-primary/30' : 'text-textMuted hover:text-white hover:bg-white/5'}`}
                 >
                     📅 Grilla Diaria
                 </button>
                 <button 
                     onClick={() => setSubTabActiva('LISTA')}
-                    className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${subTabActiva === 'LISTA' ? 'bg-secondary/20 text-secondary shadow-sm border border-secondary/30' : 'text-textMuted hover:text-white hover:bg-white/5'}`}
+                    className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0 snap-start ${subTabActiva === 'LISTA' ? 'bg-secondary/20 text-secondary shadow-sm border border-secondary/30' : 'text-textMuted hover:text-white hover:bg-white/5'}`}
                 >
                     📋 Lista de Turnos
                 </button>
                 <button 
                     onClick={() => setSubTabActiva('FORMULARIO')}
-                    className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${subTabActiva === 'FORMULARIO' ? 'bg-white/10 text-white shadow-sm border border-white/20' : 'text-textMuted hover:text-white hover:bg-white/5'}`}
+                    className={`flex-1 min-w-[120px] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0 snap-start ${subTabActiva === 'FORMULARIO' ? 'bg-white/10 text-white shadow-sm border border-white/20' : 'text-textMuted hover:text-white hover:bg-white/5'}`}
                 >
                     {preseleccion ? '✏️ Completar Reserva' : '➕ Nueva Reserva'}
                 </button>

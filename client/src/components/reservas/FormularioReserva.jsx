@@ -21,7 +21,7 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
     const labelClass = "block text-xs font-bold uppercase tracking-wider text-textMuted mb-2";
 
     return (
-        <form onSubmit={handleSubmit} className="bg-surface p-8 rounded-2xl border border-border shadow-lg max-w-4xl mx-auto relative overflow-hidden">
+        <form onSubmit={handleSubmit} className="bg-surface p-5 sm:p-8 rounded-2xl border border-border shadow-lg max-w-4xl mx-auto relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
             {/* HEADER */}
@@ -77,7 +77,7 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
 
                 {/* COLUMNA DERECHA */}
                 <div className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className={labelClass}>Fecha</label>
                             <input name="fecha" type="date" className={inputClass} value={fecha} onChange={handleChange} required />

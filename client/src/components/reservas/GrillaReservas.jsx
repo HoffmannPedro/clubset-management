@@ -30,7 +30,7 @@ const GrillaReservas = ({ data, onEmptySlotClick }) => {
 
             {/* GRILLA */}
             <div className="relative overflow-x-auto bg-surface rounded-2xl border border-border shadow-xl">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full min-w-max text-left border-collapse">
                     <thead>
                         <tr>
                             <th className="sticky left-0 z-20 p-4 bg-background/95 backdrop-blur border-b border-r border-border min-w-[80px] text-center text-textMuted text-xs font-black uppercase shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
