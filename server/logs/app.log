@@ -267,3 +267,45 @@
 2026-03-06T13:56:12.802-03:00  INFO 11660 --- [ClubSetManagement] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
 2026-03-06T13:56:12.805-03:00  INFO 11660 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
 2026-03-06T13:56:12.808-03:00  INFO 11660 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-03-06T13:56:21.306-03:00  INFO 20180 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : Starting ClubSetApplication using Java 21.0.10 with PID 20180 (F:\Cosas de BACKUP\Importante\Work\clubset-managment\server\target\classes started by hoffm in F:\Cosas de BACKUP\Importante\Work\clubset-managment\server)
+2026-03-06T13:56:21.309-03:00  INFO 20180 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : No active profile set, falling back to 1 default profile: "default"
+2026-03-06T13:56:22.243-03:00  INFO 20180 --- [ClubSetManagement] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-06T13:56:22.344-03:00  INFO 20180 --- [ClubSetManagement] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 90 ms. Found 7 JPA repository interfaces.
+2026-03-06T13:56:22.964-03:00  INFO 20180 --- [ClubSetManagement] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-03-06T13:56:22.982-03:00  INFO 20180 --- [ClubSetManagement] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-06T13:56:22.983-03:00  INFO 20180 --- [ClubSetManagement] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.49]
+2026-03-06T13:56:23.059-03:00  INFO 20180 --- [ClubSetManagement] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-06T13:56:23.060-03:00  INFO 20180 --- [ClubSetManagement] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1699 ms
+2026-03-06T13:56:23.211-03:00  INFO 20180 --- [ClubSetManagement] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-06T13:56:23.269-03:00  INFO 20180 --- [ClubSetManagement] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.36.Final
+2026-03-06T13:56:23.310-03:00  INFO 20180 --- [ClubSetManagement] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-06T13:56:23.619-03:00  INFO 20180 --- [ClubSetManagement] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-06T13:56:23.669-03:00  INFO 20180 --- [ClubSetManagement] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-06T13:56:23.920-03:00  INFO 20180 --- [ClubSetManagement] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@77ecdc2b
+2026-03-06T13:56:23.923-03:00  INFO 20180 --- [ClubSetManagement] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-06T13:56:23.988-03:00  WARN 20180 --- [ClubSetManagement] [main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-06T13:56:24.022-03:00  INFO 20180 --- [ClubSetManagement] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 17.8
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-06T13:56:25.543-03:00  INFO 20180 --- [ClubSetManagement] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-06T13:56:25.759-03:00  INFO 20180 --- [ClubSetManagement] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T13:56:26.175-03:00  INFO 20180 --- [ClubSetManagement] [main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-03-06T13:56:26.176-03:00  WARN 20180 --- [ClubSetManagement] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-03-06T13:56:26.314-03:00  INFO 20180 --- [ClubSetManagement] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-06T13:56:26.785-03:00  WARN 20180 --- [ClubSetManagement] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-06T13:56:27.294-03:00  INFO 20180 --- [ClubSetManagement] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-03-06T13:56:27.305-03:00  INFO 20180 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : Started ClubSetApplication in 6.718 seconds (process running for 7.147)
+2026-03-06T13:56:33.558-03:00  INFO 20180 --- [ClubSetManagement] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-06T13:56:33.560-03:00  INFO 20180 --- [ClubSetManagement] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-06T13:56:33.562-03:00  INFO 20180 --- [ClubSetManagement] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-03-06T13:57:54.193-03:00  INFO 20180 --- [ClubSetManagement] [http-nio-8080-exec-5] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T14:07:26.986-03:00  INFO 20180 --- [ClubSetManagement] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-06T14:07:26.990-03:00  INFO 20180 --- [ClubSetManagement] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-03-06T14:07:26.996-03:00  INFO 20180 --- [ClubSetManagement] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T14:07:27.000-03:00  INFO 20180 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-06T14:07:27.006-03:00  INFO 20180 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

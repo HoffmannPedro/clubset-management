@@ -13,6 +13,7 @@ import com.clubset.entity.Reserva;
 import com.clubset.entity.Usuario;
 import com.clubset.enums.MetodoPago;
 import com.clubset.enums.TipoMovimiento;
+import com.clubset.mapper.ReservaMapper;
 import com.clubset.repository.CanchaRepository;
 import com.clubset.repository.PagoRepository;
 import com.clubset.repository.ReservaRepository;
@@ -35,8 +36,10 @@ public class ReservaService {
     private final UsuarioRepository usuarioRepository;
     private final CanchaRepository canchaRepository;
     private final PagoRepository pagoRepository;
+    private final ReservaMapper reservaMapper;
 
-    // Inyectamos valores desde application.properties. Si no existen, usan el valor por defecto tras los dos puntos (:)
+    // Inyectamos valores desde application.properties. Si no existen, usan el valor
+    // por defecto tras los dos puntos (:)
     @Value("${club.horario.apertura:8}")
     private int horaApertura;
 
@@ -48,7 +51,7 @@ public class ReservaService {
 
     public List<ReservaDTO> obtenerTodas() {
         return reservaRepository.findAll().stream()
-                .map(this::convertirADto)
+                .map(reservaMapper::toDTO)
                 .toList();
     }
 
@@ -57,7 +60,7 @@ public class ReservaService {
         LocalDateTime finDia = fecha.atTime(LocalTime.MAX);
 
         return reservaRepository.findByFechaHoraBetween(inicioDia, finDia).stream()
-                .map(this::convertirADto)
+                .map(reservaMapper::toDTO)
                 .toList();
     }
 
@@ -82,19 +85,22 @@ public class ReservaService {
         for (int i = 0; i < semanas; i++) {
             LocalDateTime fechaChequeo = dto.getFechaHora().plusWeeks(i);
             if (reservaRepository.existsByCanchaIdAndFechaHora(dto.getCanchaId(), fechaChequeo)) {
-                throw new IllegalStateException("Conflicto: La cancha ya está reservada para el día " + fechaChequeo.toString());
+                throw new IllegalStateException(
+                        "Conflicto: La cancha ya está reservada para el día " + fechaChequeo.toString());
             }
         }
 
-        // Eliminamos el hardcodeo new BigDecimal("2000.00"). Usamos la propiedad inyectada.
+        // Eliminamos el hardcodeo new BigDecimal("2000.00"). Usamos la propiedad
+        // inyectada.
         // Lo ideal a futuro es que el precio venga de cancha.getPrecio()
         BigDecimal precioInicial = (dto.getPrecio() != null) ? dto.getPrecio() : precioBase;
         BigDecimal totalEsperado = precioInicial.multiply(new BigDecimal(semanas));
 
         if (dto.getMontoAbonado() != null && dto.getMontoAbonado().compareTo(totalEsperado) > 0) {
-            throw new IllegalArgumentException("El monto ingresado ($" + dto.getMontoAbonado() + ") supera el total de la reserva ($" + totalEsperado + ").");
+            throw new IllegalArgumentException("El monto ingresado ($" + dto.getMontoAbonado()
+                    + ") supera el total de la reserva ($" + totalEsperado + ").");
         }
-        
+
         List<Reserva> reservasCreadas = new ArrayList<>();
 
         for (int i = 0; i < semanas; i++) {
@@ -122,10 +128,12 @@ public class ReservaService {
 
         if (saldoDisponible != null && saldoDisponible.compareTo(BigDecimal.ZERO) > 0) {
             for (Reserva res : reservasCreadas) {
-                if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0) break;
+                if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0)
+                    break;
 
                 BigDecimal precioCancha = res.getPrecioPactado();
-                BigDecimal montoAImputar = (saldoDisponible.compareTo(precioCancha) >= 0) ? precioCancha : saldoDisponible;
+                BigDecimal montoAImputar = (saldoDisponible.compareTo(precioCancha) >= 0) ? precioCancha
+                        : saldoDisponible;
 
                 Pago pago = new Pago();
                 pago.setMonto(montoAImputar);
@@ -147,7 +155,7 @@ public class ReservaService {
             }
         }
 
-        return reservasCreadas.stream().map(this::convertirADto).toList();
+        return reservasCreadas.stream().map(reservaMapper::toDTO).toList();
     }
 
     private void validarReglasDeHorario(LocalDateTime fechaHora) {
@@ -158,7 +166,8 @@ public class ReservaService {
             throw new IllegalArgumentException("Los turnos deben comenzar en hora en punto (ej: 18:00, no 18:30).");
         }
         if (fechaHora.getHour() < horaApertura || fechaHora.getHour() >= horaCierre) {
-            throw new IllegalArgumentException("El club está cerrado. Horario de atención: " + horaApertura + "hs a " + horaCierre + "hs.");
+            throw new IllegalArgumentException(
+                    "El club está cerrado. Horario de atención: " + horaApertura + "hs a " + horaCierre + "hs.");
         }
     }
 
@@ -184,7 +193,8 @@ public class ReservaService {
 
         BigDecimal saldoActual = reserva.getSaldoPendiente();
         if (monto.compareTo(saldoActual) > 0) {
-            throw new IllegalArgumentException("Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
+            throw new IllegalArgumentException(
+                    "Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
         }
 
         Pago pago = new Pago();
@@ -204,7 +214,7 @@ public class ReservaService {
             reserva.setPagado(false);
         }
 
-        return convertirADto(reservaRepository.save(reserva));
+        return reservaMapper.toDTO(reservaRepository.save(reserva));
     }
 
     @Transactional
@@ -213,7 +223,8 @@ public class ReservaService {
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada."));
 
         if (!reserva.getPagos().isEmpty()) {
-            throw new IllegalStateException("CONTABILIDAD: No se puede eliminar una reserva que tiene pagos registrados. Ajuste la caja primero.");
+            throw new IllegalStateException(
+                    "CONTABILIDAD: No se puede eliminar una reserva que tiene pagos registrados. Ajuste la caja primero.");
         }
 
         reservaRepository.delete(reserva);
@@ -222,10 +233,11 @@ public class ReservaService {
     @Transactional
     public void cancelarTurnoFijo(String codigo) {
         List<Reserva> reservasDelGrupo = reservaRepository.findByCodigoTurnoFijo(codigo);
-        
+
         for (Reserva res : reservasDelGrupo) {
             if (!res.getPagos().isEmpty()) {
-                throw new IllegalStateException("CONTABILIDAD: Este turno fijo ya tiene pagos asociados en una o más fechas. No se puede eliminar en bloque.");
+                throw new IllegalStateException(
+                        "CONTABILIDAD: Este turno fijo ya tiene pagos asociados en una o más fechas. No se puede eliminar en bloque.");
             }
         }
 
@@ -236,35 +248,11 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
         reserva.setPagado(!reserva.getPagado());
-        return convertirADto(reservaRepository.save(reserva));
+        return reservaMapper.toDTO(reservaRepository.save(reserva));
     }
 
     public String obtenerCodigoPorReservaId(Long id) {
         return reservaRepository.findById(id).map(Reserva::getCodigoTurnoFijo).orElse(null);
     }
 
-    private ReservaDTO convertirADto(Reserva reserva) {
-        ReservaDTO dto = new ReservaDTO();
-        dto.setId(reserva.getId());
-        dto.setFechaHora(reserva.getFechaHora());
-        dto.setEstado(reserva.getEstado());
-        dto.setPagado(reserva.getPagado());
-        dto.setPrecio(reserva.getPrecioPactado());
-        dto.setSaldoPendiente(reserva.getSaldoPendiente());
-        dto.setCanchaId(reserva.getCancha().getId());
-        dto.setNombreCancha(reserva.getCancha().getNombre());
-        dto.setCodigoTurnoFijo(reserva.getCodigoTurnoFijo());
-        dto.setNombreContacto(reserva.getNombreContacto());
-        dto.setTelefonoContacto(reserva.getTelefonoContacto());
-
-        if (reserva.getUsuario() != null) {
-            dto.setUsuarioId(reserva.getUsuario().getId());
-            dto.setNombreUsuario(reserva.getUsuario().getNombre() + " " + reserva.getUsuario().getApellido());
-        } else {
-            dto.setUsuarioId(null);
-            dto.setNombreUsuario(reserva.getNombreContacto() + " (Inv)");
-        }
-
-        return dto;
-    }
 }
