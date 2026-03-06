@@ -1032,3 +1032,20 @@ Caused by: org.postgresql.util.PSQLException: FATAL: no existe la base de datos 
 2026-03-06T18:37:56.607-03:00  WARN 17424 --- [ClubSetManagement] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
 2026-03-06T18:37:57.014-03:00  INFO 17424 --- [ClubSetManagement] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
 2026-03-06T18:37:57.022-03:00  INFO 17424 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : Started ClubSetApplication in 4.637 seconds (process running for 4.961)
+2026-03-06T18:39:57.188-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-06T18:39:57.188-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-06T18:39:57.190-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-03-06T18:40:11.357-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-9] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T18:40:11.362-03:00  WARN 17424 --- [ClubSetManagement] [http-nio-8080-exec-9] c.c.exception.GlobalExceptionHandler     : Error de negocio: No se pueden crear reservas en el pasado.
+2026-03-06T18:40:32.496-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-9] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T18:40:32.523-03:00  WARN 17424 --- [ClubSetManagement] [http-nio-8080-exec-9] c.c.exception.GlobalExceptionHandler     : Error de negocio: El monto ingresado ($3000) supera el total de la reserva ($2500.00).
+2026-03-06T18:40:44.415-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-2] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T18:51:35.449-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-8] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T18:51:35.450-03:00  WARN 17424 --- [ClubSetManagement] [http-nio-8080-exec-8] c.c.exception.GlobalExceptionHandler     : Error de negocio: No se pueden crear reservas en el pasado.
+2026-03-06T18:51:44.081-03:00  INFO 17424 --- [ClubSetManagement] [http-nio-8080-exec-9] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T18:51:44.082-03:00  WARN 17424 --- [ClubSetManagement] [http-nio-8080-exec-9] c.c.exception.GlobalExceptionHandler     : Error de negocio: No se pueden crear reservas en el pasado.
+2026-03-06T18:54:16.276-03:00  INFO 17424 --- [ClubSetManagement] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-06T18:54:16.281-03:00  INFO 17424 --- [ClubSetManagement] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-03-06T18:54:16.285-03:00  INFO 17424 --- [ClubSetManagement] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T18:54:16.287-03:00  INFO 17424 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-06T18:54:16.298-03:00  INFO 17424 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

@@ -174,14 +174,16 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                 <div className="p-6 border-b border-border bg-black/20">
                     <h3 className="text-lg font-black text-text italic">Últimos Movimientos</h3>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* --- VERSIÓN ESCRITORIO (Tabla) --- */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs text-textMuted uppercase bg-white/5 font-black">
                             <tr>
                                 <th className="px-6 py-4">Fecha</th>
                                 <th className="px-6 py-4">Cancha</th>
                                 <th className="px-6 py-4 text-center">Estado</th>
-                                <th className="px-6 py-4 text-right">Saldo</th>
+                                <th className="px-6 py-4 text-right">Deuda</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -200,20 +202,57 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                                                 {reserva.pagado ? 'Pagado' : 'Pendiente'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-mono text-textMuted">
+                                        <td className="px-6 py-4 text-right font-mono text-textMuted font-bold">
                                             {reserva.saldoPendiente > 0 ? `$${reserva.saldoPendiente}` : '-'}
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-textMuted italic">
+                                    <td colSpan="4" className="px-6 py-8 text-center text-textMuted italic font-bold">
                                         Sin actividad reciente.
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* --- VERSIÓN MÓVIL (Tarjetas) --- */}
+                <div className="grid grid-cols-1 gap-3 p-4 md:hidden bg-background/30">
+                    {perfil.ultimasReservas && perfil.ultimasReservas.length > 0 ? (
+                        perfil.ultimasReservas.map((reserva) => (
+                            <div key={reserva.id} className="bg-surface border border-border rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                                <div className="flex justify-between items-start border-b border-border/50 pb-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black text-textMuted tracking-widest uppercase">
+                                            {new Date(reserva.fechaHora).toLocaleDateString()}
+                                        </span>
+                                        <span className="text-[10px] text-textMuted font-bold">
+                                            {new Date(reserva.fechaHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}hs
+                                        </span>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${reserva.pagado ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                                        {reserva.pagado ? 'Pagado' : 'Pendiente'}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between items-end pt-1">
+                                    <span className="font-bold text-sm text-primary uppercase">{reserva.nombreCancha}</span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[9px] font-bold text-textMuted uppercase">Deuda</span>
+                                        <span className={`font-black text-lg font-mono tracking-tighter ${reserva.saldoPendiente > 0 ? 'text-red-400' : 'text-textMuted'}`}>
+                                            {reserva.saldoPendiente > 0 ? `$${reserva.saldoPendiente}` : '$0'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-6 text-center text-textMuted italic font-bold border border-dashed border-border rounded-xl">
+                            Sin actividad reciente.
+                        </div>
+                    )}
                 </div>
             </div>
 
