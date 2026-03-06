@@ -3,7 +3,6 @@ package com.clubset.service;
 import com.clubset.dto.MovimientoPerfilDTO;
 import com.clubset.entity.Pago;
 import com.clubset.entity.Reserva;
-import com.clubset.repository.PagoRepository;
 import com.clubset.repository.ReservaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 public class FinanzasService {
 
     private final ReservaRepository reservaRepository;
-    private final PagoRepository pagoRepository;
 
     public List<MovimientoPerfilDTO> obtenerHistorialFinanciero(Long usuarioId) {
         List<MovimientoPerfilDTO> historial = new ArrayList<>();

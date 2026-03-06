@@ -1,6 +1,6 @@
 package com.clubset.dto;
 import lombok.Data;
-import java.math.BigDecimal; // Importante
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data

@@ -1,5 +1,3 @@
-// src/utils/formatters.js
-
 export const formatearConceptoMovimiento = (concepto) => {
     if (!concepto) return '';
     

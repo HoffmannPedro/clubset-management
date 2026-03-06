@@ -1,8 +1,5 @@
 import axios from 'axios';
 
-// 1. Definimos la URL del Backend
-// Lo ideal es usar variables de entorno (VITE_API_URL), pero tu lógica de hostname 
-// es perfecta para empezar sin complicarse con configuraciones de Vercel por ahora.
 const getBaseUrl = () => {
     // Si estamos desarrollando en local...
     if (window.location.hostname === 'localhost') {

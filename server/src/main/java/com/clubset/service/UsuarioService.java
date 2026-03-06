@@ -1,11 +1,9 @@
 package com.clubset.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder; // <--- 1. NUEVO IMPORT
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.clubset.dto.ReservaDTO;
 import com.clubset.dto.UsuarioDTO;
-import com.clubset.entity.Reserva;
 import com.clubset.entity.Usuario;
 import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;

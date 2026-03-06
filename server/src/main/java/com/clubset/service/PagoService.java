@@ -50,14 +50,13 @@ public class PagoService {
                 movimientos,
                 ingresos,
                 egresos,
-                ingresos.subtract(egresos)
-        );
+                ingresos.subtract(egresos));
     }
 
     private PagoDetalleDTO mapToDetalleDTO(Pago p) {
         Reserva r = p.getReserva();
-        String nombreCliente = "GASTO OPERATIVO";
-        String tipoCliente = "EGRESO";
+        String nombreCliente = (p.getTipoMovimiento() == TipoMovimiento.EGRESO) ? "GASTO OPERATIVO" : "SIN CLIENTE";
+        String tipoCliente = (p.getTipoMovimiento() == TipoMovimiento.EGRESO) ? "EGRESO" : "OTRO";
         String nombreCancha = "-";
 
         if (r != null) {
@@ -71,17 +70,19 @@ public class PagoService {
             }
         }
 
+        // Uso de Formatter en lugar de substring para evitar errores de índice
+        String horaFormateada = p.getFechaPago().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+
         return new PagoDetalleDTO(
                 p.getId(),
                 p.getMonto(),
                 p.getMetodoPago().name(),
-                p.getFechaPago().toLocalTime().toString().substring(0, 5),
+                horaFormateada,
                 p.getObservacion(),
                 nombreCliente,
                 tipoCliente,
                 nombreCancha,
-                p.getTipoMovimiento().name()
-        );
+                p.getTipoMovimiento().name());
     }
 
     @Transactional
@@ -92,7 +93,7 @@ public class PagoService {
         gasto.setFechaPago(LocalDateTime.now());
         gasto.setObservacion(observacion);
         gasto.setTipoMovimiento(TipoMovimiento.EGRESO);
-        
+
         pagoRepository.save(gasto);
     }
 }
