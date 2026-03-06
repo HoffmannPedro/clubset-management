@@ -1,26 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 // --- IMPORTAMOS REACT ROUTER ---
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../layout/Sidebar';
-import FormularioCancha from '../canchas/FormularioCancha';
-import ListaCanchas from '../canchas/ListaCanchas';
 import CajaView from '../caja/CajaView';
 import DashboardView from '../dashboard/DashboardView';
 import PerfilUsuario from '../usuarios/PerfilUsuario';
 import { deleteUsuario } from '../../services/usuarioService';
 import GestionReservasView from '../reservas/GestionReservasView';
-// --- IMPORTAMOS EL NUEVO GESTOR DE USUARIOS ---
 import GestionUsuariosView from '../usuarios/GestionUsuariosView';
+import GestionCanchasView from '../canchas/GestionCanchasView';
 
 const AdminPanel = () => {
     const { user } = useAuth();
-    
+
     // --- HOOKS DE NAVEGACIÓN ---
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     // Extraemos la pestaña actual de la URL
     const activeTab = location.pathname.split('/')[1] || '';
 
@@ -109,7 +107,7 @@ const AdminPanel = () => {
 
                 <div className="flex-1 p-4 md:p-10 overflow-x-hidden">
                     <div className="max-w-6xl mx-auto">
-                        
+
                         <Routes>
                             <Route path="/" element={<Navigate to={isAdmin ? "/dashboard" : "/perfil"} replace />} />
 
@@ -118,15 +116,12 @@ const AdminPanel = () => {
                                     <Route path="/dashboard" element={<DashboardView setActiveTab={(tabId) => navigate(`/${tabId}`)} />} />
                                     <Route path="/caja" element={<CajaView />} />
                                     <Route path="/canchas" element={
-                                        <div className="space-y-8 animate-in slide-in-from-bottom-4">
-                                            <FormularioCancha onCanchaCreada={triggerRefresh} />
-                                            <div className="overflow-x-auto pb-4"><ListaCanchas refreshKey={refreshTrigger} /></div>
-                                        </div>
+                                        <GestionCanchasView refreshKey={refreshTrigger} onCanchaCreada={triggerRefresh} />
                                     } />
-                                    
+
                                     {/* --- NUEVO BLOQUE DE USUARIOS MUCHO MÁS LIMPIO --- */}
                                     <Route path="/usuarios" element={
-                                        <GestionUsuariosView 
+                                        <GestionUsuariosView
                                             refreshKey={refreshTrigger}
                                             onEditar={handleEditar}
                                             onEliminar={handleEliminar}
@@ -137,7 +132,7 @@ const AdminPanel = () => {
                                             onVolverALista={handleVolverALista}
                                         />
                                     } />
-                                    
+
                                     <Route path="/reservas" element={
                                         <GestionReservasView refreshKey={refreshTrigger} onReservaExitosa={handleReservaExitosa} preseleccion={seleccionGrilla} onEmptySlotClick={handleSlotClick} />
                                     } />
