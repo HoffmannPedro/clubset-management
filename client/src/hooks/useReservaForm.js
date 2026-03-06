@@ -119,7 +119,7 @@ export const useReservaForm = (onReservaCreada, dataPreseleccionada) => {
         } catch (error) {
             console.error(error);
             // MEJORA: Intentamos leer el mensaje del backend si existe
-            const mensajeBackend = error.response?.data || 'No se pudo crear la reserva.';
+            const mensajeBackend = error.response?.data || 'No se pueden crear reservas en el pasado.';
             // A veces el backend manda un objeto, a veces un string. Nos aseguramos de mostrar texto.
             const mensajeFinal = typeof mensajeBackend === 'string' ? mensajeBackend : JSON.stringify(mensajeBackend);
             

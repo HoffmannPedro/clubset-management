@@ -1,8 +1,6 @@
 package com.clubset.controller;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,93 +15,56 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/reservas")
 @RequiredArgsConstructor
-@Slf4j
 public class ReservaController {
     
     private final ReservaService reservaService;
 
     @GetMapping
-    public List<ReservaDTO> listar() {
-        return reservaService.obtenerTodas();
+    public ResponseEntity<List<ReservaDTO>> listar() {
+        return ResponseEntity.ok(reservaService.obtenerTodas());
     }
 
     @GetMapping("/fecha/{fecha}")
-    public List<ReservaDTO> listarPorFecha(@PathVariable String fecha) {
-        // Parseamos a LocalDate (ej: "2026-02-26")
-        return reservaService.obtenerPorFecha(LocalDate.parse(fecha));
+    public ResponseEntity<List<ReservaDTO>> listarPorFecha(@PathVariable String fecha) {
+        return ResponseEntity.ok(reservaService.obtenerPorFecha(LocalDate.parse(fecha)));
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody ReservaDTO reservaDTO) {
-        try {
-            List<ReservaDTO> nuevasReservas = reservaService.guardarReserva(reservaDTO);
-            return ResponseEntity.ok(nuevasReservas);
-        } catch (RuntimeException e) {
-            log.warn("Error creando reserva: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<List<ReservaDTO>> crear(@RequestBody ReservaDTO reservaDTO) {
+        // Cero lógica, cero manejo de errores. Solo delegar.
+        return ResponseEntity.ok(reservaService.guardarReserva(reservaDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> cancelar(@PathVariable Long id) {
-        try {
-            reservaService.cancelarReserva(id);
-            return ResponseEntity.ok("Reserva cancelada correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> cancelar(@PathVariable Long id) {
+        reservaService.cancelarReserva(id);
+        return ResponseEntity.ok("Reserva cancelada correctamente");
     }
     
     @DeleteMapping("/{id}/completo")
-    public ResponseEntity<?> cancelarGrupo(@PathVariable Long id) {
-        try {
-            String codigo = reservaService.obtenerCodigoPorReservaId(id);
-            
-            if (codigo == null) {
-                reservaService.cancelarReserva(id);
-                return ResponseEntity.ok("Reserva única eliminada");
-            }
-            
-            reservaService.cancelarTurnoFijo(codigo);
-            return ResponseEntity.ok("Turno fijo completo eliminado correctamente");
-            
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    public ResponseEntity<String> cancelarGrupo(@PathVariable Long id) {
+        String codigo = reservaService.obtenerCodigoPorReservaId(id);
+        
+        if (codigo == null) {
+            reservaService.cancelarReserva(id);
+            return ResponseEntity.ok("Reserva única eliminada");
         }
+        
+        reservaService.cancelarTurnoFijo(codigo);
+        return ResponseEntity.ok("Turno fijo completo eliminado correctamente");
     }
 
     @PostMapping("/{id}/pagos")
-    public ResponseEntity<?> registrarPago(@PathVariable Long id, @RequestBody PagoRequest request) {
-        try {
-            ReservaDTO actualizado = reservaService.registrarPago(
-                id, 
-                request.getMonto(), 
-                request.getMetodoPago(), 
-                request.getObservacion()
-            );
-            return ResponseEntity.ok(actualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ReservaDTO> registrarPago(@PathVariable Long id, @RequestBody PagoRequest request) {
+        return ResponseEntity.ok(reservaService.registrarPago(
+            id, request.monto(), request.metodoPago(), request.observacion()
+        ));
     }
 
-    // Mantenemos este por compatibilidad, pero idealmente el frontend migrará al de arriba
     @PutMapping("/{id}/pago")
-    public ResponseEntity<?> togglePago(@PathVariable Long id) {
-        try {
-            ReservaDTO reservaActualizada = reservaService.togglePago(id);
-            return ResponseEntity.ok(reservaActualizada);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ReservaDTO> togglePago(@PathVariable Long id) {
+        return ResponseEntity.ok(reservaService.togglePago(id));
     }
 
-    // --- DTO INTERNO PARA EL REQUEST DE PAGO ---
-    // Al ser estático y pequeño, puede vivir aquí. 
-    @Data
-    public static class PagoRequest {
-        private BigDecimal monto;
-        private MetodoPago metodoPago;
-        private String observacion;
-    }
+    public record PagoRequest(BigDecimal monto, MetodoPago metodoPago, String observacion) {}
 }

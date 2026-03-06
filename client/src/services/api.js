@@ -33,17 +33,31 @@ api.interceptors.request.use(
     }
 );
 
-// --- INTERCEPTOR DE ERRORES (Opcional pero recomendado) ---
-// Si el token expira (Error 403/401), cerramos sesión automáticamente
+// --- INTERCEPTOR DE ERRORES GLOBALES ---
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        // 1. Manejo de Sesión
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            // Si el backend nos rechaza por token inválido, limpiamos y redirigimos
             localStorage.removeItem('token');
-            // Opcional: window.location.href = '/'; 
+            // window.location.href = '/login'; 
         }
-        return Promise.reject(error);
+
+        // 2. Extracción limpia del mensaje de error del Backend
+        let mensajeLimpio = "Error de conexión con el servidor. Revisá tu red.";
+
+        if (error.response && error.response.data) {
+            if (error.response.data.message) {
+                // Ataja nuestro nuevo ErrorResponseDTO de Spring Boot
+                mensajeLimpio = error.response.data.message;
+            } else if (typeof error.response.data === 'string') {
+                // Fallback por si algún endpoint viejo devuelve texto
+                mensajeLimpio = error.response.data;
+            }
+        }
+
+        // 3. Rechazamos la promesa devolviendo SOLO el mensaje limpio
+        return Promise.reject(new Error(mensajeLimpio));
     }
 );
 
