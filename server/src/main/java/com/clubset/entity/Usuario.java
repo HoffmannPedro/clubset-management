@@ -39,6 +39,7 @@ public class Usuario implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Mano manoHabil;
 
+    @Column(length = 500)
     private String fotoPerfilUrl;
 
     private Integer puntosRanking = 0;

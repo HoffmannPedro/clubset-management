@@ -10,6 +10,7 @@ import com.clubset.entity.Usuario;
 import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -56,7 +57,6 @@ public class UsuarioService {
                 .orElse(null);
     }
 
-    // --- NUEVO MÉTODO PARA PERFIL ---
     public UsuarioDTO buscarPorEmail(String email) {
         // Usamos el mismo repositorio que ya configuraste para el Auth
         return usuarioRepository.findByEmail(email)
@@ -69,6 +69,28 @@ public class UsuarioService {
         if (usuarioRepository.existsById(id)) {
             usuarioRepository.deleteById(id);
         }
+    }
+
+    @Transactional
+    public UsuarioDTO actualizarPerfilPropio(String email, Usuario datosNuevos) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // BLINDAJE DE SEGURIDAD: Solo actualizamos lo que el usuario tiene permitido tocar
+        if (datosNuevos.getNombre() != null && !datosNuevos.getNombre().isBlank()) {
+            usuario.setNombre(datosNuevos.getNombre());
+        }
+        if (datosNuevos.getApellido() != null && !datosNuevos.getApellido().isBlank()) {
+            usuario.setApellido(datosNuevos.getApellido());
+        }
+        if (datosNuevos.getTelefono() != null) {
+            usuario.setTelefono(datosNuevos.getTelefono());
+        }
+        if (datosNuevos.getFotoPerfilUrl() != null) {
+            usuario.setFotoPerfilUrl(datosNuevos.getFotoPerfilUrl());
+        }
+
+        return convertirADto(usuarioRepository.save(usuario));
     }
 
     // Mapper actualizado
@@ -84,6 +106,7 @@ public class UsuarioService {
         dto.setGenero(usuario.getGenero());
         dto.setManoHabil(usuario.getManoHabil());
         dto.setPuntosRanking(usuario.getPuntosRanking());
+        dto.setFotoPerfilUrl(usuario.getFotoPerfilUrl());
         
         // --- 1. CÁLCULO DE DEUDA (CORREGIDO) ---
         // Traemos las reservas impagas

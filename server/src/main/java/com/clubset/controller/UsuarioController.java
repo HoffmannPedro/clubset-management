@@ -52,9 +52,20 @@ public class UsuarioController {
         usuario.setId(id);
         return usuarioService.guardarUsuario(usuario); // save() funciona como update si tiene ID
     }
-
+    
     @DeleteMapping("/{id}")
     public void eliminarUsuario(@PathVariable Long id) {
         usuarioService.eliminarUsuario(id);
+    }
+
+    // PUT: Actualizar MI perfil (Autogestión segura)
+    @PutMapping("/me")
+    public UsuarioDTO actualizarMiPerfil(@RequestBody Usuario actualizacion) {
+        // 1. Obtenemos quién es el usuario logueado gracias al Token
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        
+        // 2. Mandamos a actualizar de forma segura
+        return usuarioService.actualizarPerfilPropio(email, actualizacion);
     }
 }

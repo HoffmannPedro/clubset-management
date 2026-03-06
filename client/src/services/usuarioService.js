@@ -24,3 +24,8 @@ export const deleteUsuario = async (id) => {
     const response = await api.delete(`/usuarios/${id}`);
     return response.data;
 };
+
+export const actualizarMiPerfil = async (datos) => {
+    const response = await api.put('/usuarios/me', datos);
+    return response.data;
+};
