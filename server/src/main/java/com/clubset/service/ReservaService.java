@@ -1,6 +1,7 @@
 package com.clubset.service;
 
 import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import com.clubset.entity.Pago;
 import com.clubset.entity.Reserva;
 import com.clubset.entity.Usuario;
 import com.clubset.enums.MetodoPago;
+import com.clubset.enums.TipoMovimiento;
 import com.clubset.repository.CanchaRepository;
 import com.clubset.repository.PagoRepository;
 import com.clubset.repository.ReservaRepository;
@@ -145,7 +147,7 @@ public class ReservaService {
                 pago.setMetodoPago(MetodoPago.valueOf(dto.getMetodoPago()));
                 pago.setFechaPago(LocalDateTime.now());
                 pago.setObservacion(semanas > 1 ? "Pago adelantado (Turno Fijo)" : "Pago adelantado");
-                pago.setTipoMovimiento("INGRESO");
+                pago.setTipoMovimiento(TipoMovimiento.INGRESO);
                 pago.setReserva(res);
 
                 pagoRepository.save(pago);
@@ -220,7 +222,7 @@ public class ReservaService {
         pago.setMetodoPago(metodo);
         pago.setFechaPago(LocalDateTime.now());
         pago.setObservacion(observacion);
-        pago.setTipoMovimiento("INGRESO"); // Aseguramos que es un ingreso
+        pago.setTipoMovimiento(TipoMovimiento.INGRESO); // Aseguramos que es un ingreso
         pago.setReserva(reserva);
 
         pagoRepository.save(pago);

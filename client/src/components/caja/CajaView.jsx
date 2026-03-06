@@ -5,7 +5,7 @@ const CajaView = () => {
     const [pagosDelDia, setPagosDelDia] = useState([]);
     const [fechaCaja, setFechaCaja] = useState(new Date().toLocaleDateString('en-CA'));
     const [loading, setLoading] = useState(false);
-    
+
     // Estados para el Modal de Gastos
     const [showGastoModal, setShowGastoModal] = useState(false);
     const [gastoData, setGastoData] = useState({ monto: '', metodoPago: 'EFECTIVO', observacion: '' });
@@ -17,8 +17,9 @@ const CajaView = () => {
     const fetchPagos = async () => {
         setLoading(true);
         try {
-            const datosLimpios = await getPagosDiarios(fechaCaja);
-            setPagosDelDia(datosLimpios);
+            const data = await getPagosDiarios(fechaCaja);
+            // data ahora es el ResumenCajaDTO { movimientos: [], totalIngresos: ... }
+            setPagosDelDia(data.movimientos || []);
         } catch (error) {
             console.error("Error cargando caja:", error);
         } finally {
@@ -29,18 +30,18 @@ const CajaView = () => {
     const handleGuardarGasto = async (e) => {
         e.preventDefault();
         if (!gastoData.monto || !gastoData.observacion) return alert("Por favor, completa el monto y la observación.");
-        
+
         try {
             await registrarGastoManual({
                 monto: parseFloat(gastoData.monto),
                 metodoPago: gastoData.metodoPago,
                 observacion: gastoData.observacion
             });
-            
+
             setShowGastoModal(false);
             setGastoData({ monto: '', metodoPago: 'EFECTIVO', observacion: '' });
             fetchPagos();
-            
+
         } catch (error) {
             alert("Hubo un error al registrar el gasto.");
             console.error(error);
@@ -75,21 +76,21 @@ const CajaView = () => {
 
     return (
         <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-4 duration-500 relative">
-            
+
             {/* 1. Filtro Fecha y Botón Gasto */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface p-4 md:p-5 rounded-2xl border border-border shadow-sm">
                 <div className="flex flex-row items-center justify-between w-full sm:w-auto gap-4">
                     {/* El título ahora SIEMPRE se ve, le sacamos el hidden */}
                     <h3 className="text-xl md:text-2xl font-black italic text-text">Movimientos</h3>
-                    <input 
-                        type="date" 
+                    <input
+                        type="date"
                         value={fechaCaja}
                         onChange={(e) => setFechaCaja(e.target.value)}
                         className="bg-background border border-border rounded-xl p-3 text-sm text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none font-bold uppercase transition-all"
                     />
                 </div>
-                
-                <button 
+
+                <button
                     onClick={() => setShowGastoModal(true)}
                     className="w-full sm:w-auto bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:scale-[1.02] active:scale-95 border border-red-500/30 font-black uppercase tracking-widest text-xs px-6 py-3.5 rounded-xl transition-all shadow-sm"
                 >
@@ -126,7 +127,7 @@ const CajaView = () => {
                 <>
                     {/* MOBILE */}
                     <div className="md:hidden space-y-4">
-                        
+
                         {/* Título de sección para celular */}
                         <div className="flex items-center gap-3 pt-2">
                             <h4 className="text-xs font-black text-textMuted uppercase tracking-[0.2em]">Detalle Operativo</h4>
@@ -139,7 +140,7 @@ const CajaView = () => {
                                 return (
                                     // Cambiamos el padding a p-5 (clase estándar válida) y le dimos un diseño limpio de "Billetera Virtual"
                                     <div key={pago.id} className={`bg-surface p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col gap-3 border ${esGasto ? 'border-red-500/30' : 'border-border'}`}>
-                                        
+
                                         {/* Fila Superior: Info técnica y Monto */}
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2">
@@ -154,7 +155,7 @@ const CajaView = () => {
                                                 {esGasto ? '-' : ''}${pago.monto}
                                             </span>
                                         </div>
-                                        
+
                                         {/* Fila Inferior: Cliente y Detalle */}
                                         <div className="flex flex-col">
                                             <p className={`font-black text-sm uppercase tracking-wide ${esGasto ? 'text-red-400' : 'text-text'}`}>
@@ -219,12 +220,12 @@ const CajaView = () => {
                     <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto hide-scrollbar">
                         <h3 className="text-xl font-black italic text-text mb-1">Registrar Salida</h3>
                         <p className="text-xs text-textMuted uppercase tracking-widest mb-6">Nuevo Gasto Operativo</p>
-                        
+
                         <form onSubmit={handleGuardarGasto} className="space-y-5">
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-textMuted mb-2 ml-1">Monto ($)</label>
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
                                     min="1"
                                     step="0.01"
                                     required
@@ -232,17 +233,17 @@ const CajaView = () => {
                                     className="w-full bg-background border border-border text-text rounded-xl p-3.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none font-black text-xl transition-all"
                                     placeholder="0.00"
                                     value={gastoData.monto}
-                                    onChange={(e) => setGastoData({...gastoData, monto: e.target.value})}
+                                    onChange={(e) => setGastoData({ ...gastoData, monto: e.target.value })}
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-textMuted mb-2 ml-1">Método de Extracción</label>
                                 <div className="relative">
-                                    <select 
+                                    <select
                                         className="w-full bg-background border border-border text-text rounded-xl p-3.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none font-bold text-sm appearance-none cursor-pointer transition-all"
                                         value={gastoData.metodoPago}
-                                        onChange={(e) => setGastoData({...gastoData, metodoPago: e.target.value})}
+                                        onChange={(e) => setGastoData({ ...gastoData, metodoPago: e.target.value })}
                                     >
                                         <option value="EFECTIVO">Efectivo (Caja Física)</option>
                                         <option value="TRANSFERENCIA">Transferencia / Billetera Virtual</option>
@@ -257,25 +258,25 @@ const CajaView = () => {
 
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-textMuted mb-2 ml-1">Concepto / Observación</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     required
                                     placeholder="Ej: Artículos de limpieza, Pago de luz..."
                                     className="w-full bg-background border border-border text-text rounded-xl p-3.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-sm font-medium transition-all"
                                     value={gastoData.observacion}
-                                    onChange={(e) => setGastoData({...gastoData, observacion: e.target.value})}
+                                    onChange={(e) => setGastoData({ ...gastoData, observacion: e.target.value })}
                                 />
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-border mt-2">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setShowGastoModal(false)}
                                     className="flex-1 bg-transparent border border-border text-textMuted hover:text-text hover:bg-white/5 font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all order-2 sm:order-1"
                                 >
                                     Cancelar
                                 </button>
-                                <button 
+                                <button
                                     type="submit"
                                     className="flex-1 bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl shadow-[0_10px_20px_rgba(220,38,38,0.2)] transition-all hover:scale-[1.02] active:scale-95 order-1 sm:order-2"
                                 >

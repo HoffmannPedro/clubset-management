@@ -1,15 +1,19 @@
 package com.clubset.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.clubset.enums.MetodoPago;
+import com.clubset.enums.TipoMovimiento;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "pagos")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Pago {
     @Id
@@ -27,14 +31,27 @@ public class Pago {
     
     private String observacion;
 
-    // --- NUEVO: ¿Entra o sale plata? ---
-    // Usamos String por simplicidad ("INGRESO" o "EGRESO")
-    
-    private String tipoMovimiento = "INGRESO";
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoMovimiento tipoMovimiento = TipoMovimiento.INGRESO;
 
-    // --- EL CAMBIO CLAVE: nullable = true ---
-    // Ahora un pago puede existir sin estar atado a un partido
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Agregamos LAZY por performance
     @JoinColumn(name = "reserva_id", nullable = true)
     private Reserva reserva;
+
+    
+    // Sobrescribimos Equals y HashCode manualmente basándonos solo en el ID
+    // Esto evita ciclos infinitos y problemas con Hibernate
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pago pago = (Pago) o;
+        return id != null && id.equals(pago.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

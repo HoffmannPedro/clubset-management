@@ -30,7 +30,7 @@ const DashboardView = ({ setActiveTab }) => {
                     getReservasByFecha(hoyStr).catch(() => [])
                 ]);
 
-                setPagosDelDia(pagos);
+                setPagosDelDia(pagos.movimientos || []);
                 setTotalSocios(usuarios.length);
                 setCanchasActivas(canchas.filter(c => c.disponible).length);
 
