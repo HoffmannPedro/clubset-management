@@ -6,7 +6,7 @@ import { mostrarAlerta, confirmarEliminacionGrupal, mostrarDetallesReserva, most
 export const useGrillaReservas = (refreshKey) => {
     const [reservas, setReservas] = useState([]);
     const [canchas, setCanchas] = useState([]);
-    const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date().toISOString().split('T')[0]);
+    const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date().toLocaleDateString('en-CA'));
 
     // Generamos las horas de 09:00 a 22:00
     const horas = Array.from({ length: 14 }, (_, i) => i + 9);
@@ -78,7 +78,16 @@ export const useGrillaReservas = (refreshKey) => {
             }
         } catch (error) {
             console.error("Error al cancelar:", error);
-            mostrarAlerta('Error', 'No se pudo cancelar la reserva.', 'error');
+
+            // Atrapamos el mensaje exacto que escupe Spring Boot (ej: "CONTABILIDAD:...")
+            const mensajeBackend = error.response?.data;
+
+            // Nos aseguramos de que sea texto legible, si no, mostramos el genérico
+            const mensajeFinal = typeof mensajeBackend === 'string'
+                ? mensajeBackend
+                : 'No se pudo cancelar la reserva.';
+
+            mostrarAlerta('Atención', mensajeFinal, 'warning'); // Usamos 'warning' para que no parezca un bug del sistema, sino una regla de negocio
         }
     };
 

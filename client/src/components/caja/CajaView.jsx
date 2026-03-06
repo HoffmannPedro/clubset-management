@@ -3,7 +3,7 @@ import { getPagosDiarios, registrarGastoManual } from '../../services/pagoServic
 
 const CajaView = () => {
     const [pagosDelDia, setPagosDelDia] = useState([]);
-    const [fechaCaja, setFechaCaja] = useState(new Date().toISOString().split('T')[0]);
+    const [fechaCaja, setFechaCaja] = useState(new Date().toLocaleDateString('en-CA'));
     const [loading, setLoading] = useState(false);
     
     // Estados para el Modal de Gastos

@@ -1,0 +1,62 @@
+2026-03-06T00:02:48.050-03:00  INFO 19092 --- [ClubSetManagement] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-06T00:02:48.059-03:00  INFO 19092 --- [ClubSetManagement] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-03-06T00:02:48.066-03:00  INFO 19092 --- [ClubSetManagement] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T00:02:48.070-03:00  INFO 19092 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-06T00:02:48.075-03:00  INFO 19092 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-03-06T00:02:57.404-03:00  INFO 22860 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : Starting ClubSetApplication using Java 21.0.10 with PID 22860 (F:\Cosas de BACKUP\Importante\Work\clubset-managment\server\target\classes started by hoffm in F:\Cosas de BACKUP\Importante\Work\clubset-managment\server)
+2026-03-06T00:02:57.412-03:00  INFO 22860 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : No active profile set, falling back to 1 default profile: "default"
+2026-03-06T00:02:58.287-03:00  INFO 22860 --- [ClubSetManagement] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-06T00:02:58.382-03:00  INFO 22860 --- [ClubSetManagement] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 84 ms. Found 7 JPA repository interfaces.
+2026-03-06T00:02:59.037-03:00  INFO 22860 --- [ClubSetManagement] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-03-06T00:02:59.059-03:00  INFO 22860 --- [ClubSetManagement] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-06T00:02:59.061-03:00  INFO 22860 --- [ClubSetManagement] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.49]
+2026-03-06T00:02:59.158-03:00  INFO 22860 --- [ClubSetManagement] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-06T00:02:59.159-03:00  INFO 22860 --- [ClubSetManagement] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1700 ms
+2026-03-06T00:02:59.308-03:00  INFO 22860 --- [ClubSetManagement] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-06T00:02:59.364-03:00  INFO 22860 --- [ClubSetManagement] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.36.Final
+2026-03-06T00:02:59.403-03:00  INFO 22860 --- [ClubSetManagement] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-06T00:02:59.720-03:00  INFO 22860 --- [ClubSetManagement] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-06T00:02:59.756-03:00  INFO 22860 --- [ClubSetManagement] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-06T00:03:00.067-03:00  INFO 22860 --- [ClubSetManagement] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@5635bcd2
+2026-03-06T00:03:00.069-03:00  INFO 22860 --- [ClubSetManagement] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-06T00:03:00.126-03:00  WARN 22860 --- [ClubSetManagement] [main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-06T00:03:00.151-03:00  INFO 22860 --- [ClubSetManagement] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 17.8
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-06T00:03:01.513-03:00  INFO 22860 --- [ClubSetManagement] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-06T00:03:01.679-03:00  INFO 22860 --- [ClubSetManagement] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T00:03:02.103-03:00  INFO 22860 --- [ClubSetManagement] [main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-03-06T00:03:02.104-03:00  WARN 22860 --- [ClubSetManagement] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-03-06T00:03:02.246-03:00  INFO 22860 --- [ClubSetManagement] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-06T00:03:02.729-03:00  WARN 22860 --- [ClubSetManagement] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-06T00:03:03.247-03:00  INFO 22860 --- [ClubSetManagement] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-03-06T00:03:03.258-03:00  INFO 22860 --- [ClubSetManagement] [main] com.clubset.ClubSetApplication           : Started ClubSetApplication in 6.527 seconds (process running for 6.93)
+2026-03-06T00:03:09.894-03:00  INFO 22860 --- [ClubSetManagement] [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-06T00:03:09.895-03:00  INFO 22860 --- [ClubSetManagement] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-06T00:03:09.899-03:00  INFO 22860 --- [ClubSetManagement] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+2026-03-06T00:03:34.125-03:00  WARN 22860 --- [ClubSetManagement] [http-nio-8080-exec-9] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23503
+2026-03-06T00:03:34.126-03:00 ERROR 22860 --- [ClubSetManagement] [http-nio-8080-exec-9] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: update o delete en «reserva» viola la llave foránea «fktjsqwycet771msqum0xs8fmlv» en la tabla «pagos»
+  Detail: La llave (id)=(20) todavía es referida desde la tabla «pagos».
+2026-03-06T00:04:08.026-03:00  WARN 22860 --- [ClubSetManagement] [http-nio-8080-exec-6] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23503
+2026-03-06T00:04:08.027-03:00 ERROR 22860 --- [ClubSetManagement] [http-nio-8080-exec-6] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: update o delete en «reserva» viola la llave foránea «fktjsqwycet771msqum0xs8fmlv» en la tabla «pagos»
+  Detail: La llave (id)=(20) todavía es referida desde la tabla «pagos».
+2026-03-06T00:04:21.786-03:00  WARN 22860 --- [ClubSetManagement] [http-nio-8080-exec-10] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23503
+2026-03-06T00:04:21.786-03:00 ERROR 22860 --- [ClubSetManagement] [http-nio-8080-exec-10] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: update o delete en «reserva» viola la llave foránea «fktjsqwycet771msqum0xs8fmlv» en la tabla «pagos»
+  Detail: La llave (id)=(18) todavía es referida desde la tabla «pagos».
+2026-03-06T00:04:58.413-03:00  INFO 22860 --- [ClubSetManagement] [http-nio-8080-exec-9] com.clubset.service.ReservaService       : Iniciando creación de reserva...
+2026-03-06T00:05:18.845-03:00  WARN 22860 --- [ClubSetManagement] [http-nio-8080-exec-2] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23503
+2026-03-06T00:05:18.846-03:00 ERROR 22860 --- [ClubSetManagement] [http-nio-8080-exec-2] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: update o delete en «reserva» viola la llave foránea «fktjsqwycet771msqum0xs8fmlv» en la tabla «pagos»
+  Detail: La llave (id)=(18) todavía es referida desde la tabla «pagos».
+2026-03-06T00:05:21.716-03:00  WARN 22860 --- [ClubSetManagement] [http-nio-8080-exec-9] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23503
+2026-03-06T00:05:21.717-03:00 ERROR 22860 --- [ClubSetManagement] [http-nio-8080-exec-9] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: update o delete en «reserva» viola la llave foránea «fktjsqwycet771msqum0xs8fmlv» en la tabla «pagos»
+  Detail: La llave (id)=(27) todavía es referida desde la tabla «pagos».
+2026-03-06T00:10:31.324-03:00  INFO 22860 --- [ClubSetManagement] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-06T00:10:31.328-03:00  INFO 22860 --- [ClubSetManagement] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-03-06T00:10:31.334-03:00  INFO 22860 --- [ClubSetManagement] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T00:10:31.338-03:00  INFO 22860 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-06T00:10:31.350-03:00  INFO 22860 --- [ClubSetManagement] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

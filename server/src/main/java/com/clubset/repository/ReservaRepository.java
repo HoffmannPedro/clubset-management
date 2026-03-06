@@ -20,6 +20,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
         List<Reserva> findTop5ByUsuarioIdOrderByFechaHoraDesc(Long usuarioId);
 
+        List<Reserva> findByCodigoTurnoFijo(String codigoTurnoFijo);
+
         Long countByUsuarioId(Long usuarioId);
 
         @Modifying

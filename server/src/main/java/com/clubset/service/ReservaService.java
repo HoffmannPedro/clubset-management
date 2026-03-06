@@ -88,8 +88,15 @@ public class ReservaService {
             }
         }
 
-        // 6. Persistencia
+        // 6. Persistencia de las Reservas
+        // Calculamos cuánto va a salir todo en total
         BigDecimal precioInicial = (dto.getPrecio() != null) ? dto.getPrecio() : new BigDecimal("2000.00");
+        BigDecimal totalEsperado = precioInicial.multiply(new BigDecimal(semanas));
+
+        // Validamos que no nos estén dando plata de más
+        if (dto.getMontoAbonado() != null && dto.getMontoAbonado().compareTo(totalEsperado) > 0) {
+            throw new RuntimeException("El monto ingresado ($" + dto.getMontoAbonado() + ") supera el total de la reserva ($" + totalEsperado + ").");
+        }
         List<Reserva> reservasCreadas = new ArrayList<>();
 
         for (int i = 0; i < semanas; i++) {
@@ -113,11 +120,53 @@ public class ReservaService {
             reservasCreadas.add(reservaRepository.save(reserva));
         }
 
+        // 7. LÓGICA FINANCIERA: Método Cascada 🌊
+        BigDecimal saldoDisponible = dto.getMontoAbonado();
+
+        if (saldoDisponible != null && saldoDisponible.compareTo(BigDecimal.ZERO) > 0) {
+
+            for (Reserva res : reservasCreadas) {
+                if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0)
+                    break; // Se acabó la plata
+
+                BigDecimal precioCancha = res.getPrecioPactado();
+                BigDecimal montoAImputar;
+
+                // ¿Alcanza para pagar toda esta reserva o solo una parte?
+                if (saldoDisponible.compareTo(precioCancha) >= 0) {
+                    montoAImputar = precioCancha; // Pago completo
+                } else {
+                    montoAImputar = saldoDisponible; // Pago parcial
+                }
+
+                // Creamos el pago físico en la caja
+                Pago pago = new Pago();
+                pago.setMonto(montoAImputar);
+                pago.setMetodoPago(MetodoPago.valueOf(dto.getMetodoPago()));
+                pago.setFechaPago(LocalDateTime.now());
+                pago.setObservacion(semanas > 1 ? "Pago adelantado (Turno Fijo)" : "Pago adelantado");
+                pago.setTipoMovimiento("INGRESO");
+                pago.setReserva(res);
+
+                pagoRepository.save(pago);
+
+                // Actualizamos el estado de la reserva
+                res.getPagos().add(pago);
+                if (res.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+                    res.setPagado(true);
+                }
+                reservaRepository.save(res);
+
+                // Restamos la plata que ya usamos
+                saldoDisponible = saldoDisponible.subtract(montoAImputar);
+            }
+        }
+
         return reservasCreadas.stream().map(this::convertirADto).toList();
+
     }
 
     // --- MÉTODOS PRIVADOS DE VALIDACIÓN (CLEAN CODE) ---
-
     private void validarReglasDeHorario(LocalDateTime fechaHora) {
         // Regla 1: No viajar al pasado
         if (fechaHora.isBefore(LocalDateTime.now())) {
@@ -162,7 +211,8 @@ public class ReservaService {
 
         BigDecimal saldoActual = reserva.getSaldoPendiente();
         if (monto.compareTo(saldoActual) > 0) {
-            throw new RuntimeException("Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
+            throw new RuntimeException(
+                    "Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
         }
 
         Pago pago = new Pago();
@@ -185,13 +235,30 @@ public class ReservaService {
         return convertirADto(reservaRepository.save(reserva));
     }
 
+    @Transactional
     public void cancelarReserva(Long id) {
-        if (!reservaRepository.existsById(id))
-            throw new RuntimeException("Reserva no encontrada.");
-        reservaRepository.deleteById(id);
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada."));
+
+        // ESCUDO FINANCIERO: ¿Tiene pagos?
+        if (!reserva.getPagos().isEmpty()) {
+            throw new RuntimeException("CONTABILIDAD: No se puede eliminar una reserva que tiene pagos registrados. Si es un error, el administrador debe ajustar la caja primero.");
+        }
+
+        reservaRepository.delete(reserva);
     }
 
+    @Transactional
     public void cancelarTurnoFijo(String codigo) {
+        List<Reserva> reservasDelGrupo = reservaRepository.findByCodigoTurnoFijo(codigo);
+        
+        // ESCUDO FINANCIERO GRUPAL: Revisamos si alguna de las reservas del mes ya tiene plata
+        for (Reserva res : reservasDelGrupo) {
+            if (!res.getPagos().isEmpty()) {
+                throw new RuntimeException("CONTABILIDAD: Este turno fijo ya tiene pagos asociados en una o más fechas. No se puede eliminar en bloque para proteger la caja.");
+            }
+        }
+
         reservaRepository.deleteByCodigoTurnoFijo(codigo);
     }
 

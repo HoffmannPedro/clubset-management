@@ -19,7 +19,9 @@ export const useReservaForm = (onReservaCreada, dataPreseleccionada) => {
         canchaId: '',
         fecha: '',
         hora: '',
-        repetirSemanas: 1
+        repetirSemanas: 1,
+        montoAbonado: '',
+        metodoPago: 'EFECTIVO'
     });
 
     // 2. CARGA DE DATOS (Mantenemos igual)
@@ -73,7 +75,7 @@ export const useReservaForm = (onReservaCreada, dataPreseleccionada) => {
     // 4. LÓGICA DE ENVÍO
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const { canchaId, fecha, hora, modoReserva, usuarioId, nombreContacto, telefonoContacto, repetirSemanas } = formData;
+        const { canchaId, fecha, hora, modoReserva, usuarioId, nombreContacto, telefonoContacto, repetirSemanas, montoAbonado, metodoPago } = formData;
 
         if (!canchaId || !fecha || !hora) {
             mostrarAlerta('Faltan Datos', 'Selecciona cancha, fecha y hora.', 'warning');
@@ -98,7 +100,9 @@ export const useReservaForm = (onReservaCreada, dataPreseleccionada) => {
                 repetirSemanas: parseInt(repetirSemanas),
                 usuarioId: modoReserva === 'SOCIO' ? parseInt(usuarioId) : null,
                 nombreContacto: modoReserva === 'INVITADO' ? nombreContacto : null,
-                telefonoContacto: modoReserva === 'INVITADO' ? telefonoContacto : null
+                telefonoContacto: modoReserva === 'INVITADO' ? telefonoContacto : null,
+                montoAbonado: montoAbonado ? parseFloat(montoAbonado) : null,
+                metodoPago: montoAbonado ? metodoPago : null
             };
 
             await crearReserva(payload); // <--- Tu función original

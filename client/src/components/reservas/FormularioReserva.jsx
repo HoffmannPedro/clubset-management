@@ -1,7 +1,7 @@
-import { useReservaForm } from '../../hooks/useReservaForm'; // <--- Importamos el cerebro
+import { useState } from 'react';
+import { useReservaForm } from '../../hooks/useReservaForm';
 
 const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
-    // Extraemos todo lo que necesitamos del Hook
     const {
         formData,
         usuarios,
@@ -12,7 +12,10 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
         handleSubmit
     } = useReservaForm(onReservaCreada, preseleccion);
 
-    const { modoReserva, usuarioId, nombreContacto, telefonoContacto, canchaId, fecha, hora, repetirSemanas } = formData;
+    const { modoReserva, usuarioId, nombreContacto, telefonoContacto, canchaId, fecha, hora, repetirSemanas, montoAbonado, metodoPago } = formData;
+    
+    // Estado para mostrar/ocultar el panel de pago adelantado
+    const [registrarPago, setRegistrarPago] = useState(false);
 
     const inputClass = "w-full bg-background border border-border text-text rounded-xl p-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-medium h-[50px]";
     const labelClass = "block text-xs font-bold uppercase tracking-wider text-textMuted mb-2";
@@ -44,7 +47,7 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
                     {modoReserva === 'SOCIO' ? (
                         <div className="animate-in fade-in slide-in-from-left-4 duration-300">
                             <label className={labelClass}>Socio del Club</label>
-                            <select name="usuarioId" className={inputClass} value={usuarioId} onChange={handleChange}>
+                            <select name="usuarioId" className={inputClass} value={usuarioId} onChange={handleChange} required>
                                 <option value="">-- Seleccionar Jugador --</option>
                                 {usuarios.map(u => (<option key={u.id} value={u.id}>{u.nombre} {u.apellido}</option>))}
                             </select>
@@ -53,18 +56,18 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
                         <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-5">
                             <div>
                                 <label className={labelClass}>Nombre Completo</label>
-                                <input name="nombreContacto" type="text" className={inputClass} placeholder="Ej: Juan Perez" value={nombreContacto} onChange={handleChange} autoFocus />
+                                <input name="nombreContacto" type="text" className={inputClass} placeholder="Ej: Juan Perez" value={nombreContacto} onChange={handleChange} autoFocus required />
                             </div>
                             <div>
                                 <label className={labelClass}>Teléfono</label>
-                                <input name="telefonoContacto" type="tel" className={inputClass} placeholder="Ej: 11 1234 5678" value={telefonoContacto} onChange={handleChange} />
+                                <input name="telefonoContacto" type="tel" className={inputClass} placeholder="Ej: 11 1234 5678" value={telefonoContacto} onChange={handleChange} required />
                             </div>
                         </div>
                     )}
 
                     <div>
                         <label className={labelClass}>Cancha Asignada</label>
-                        <select name="canchaId" className={inputClass} value={canchaId} onChange={handleChange}>
+                        <select name="canchaId" className={inputClass} value={canchaId} onChange={handleChange} required>
                             <option value="">-- Seleccionar Cancha --</option>
                             {canchas.map(c => (<option key={c.id} value={c.id}>{c.nombre} ({c.superficie})</option>))}
                         </select>
@@ -77,11 +80,11 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className={labelClass}>Fecha</label>
-                            <input name="fecha" type="date" className={inputClass} value={fecha} onChange={handleChange} />
+                            <input name="fecha" type="date" className={inputClass} value={fecha} onChange={handleChange} required />
                         </div>
                         <div>
                             <label className={labelClass}>Hora</label>
-                            <select name="hora" className={inputClass} value={hora} onChange={handleChange}>
+                            <select name="hora" className={inputClass} value={hora} onChange={handleChange} required>
                                 <option value="">--</option>
                                 {horariosDisponibles.map(h => (<option key={h.valor} value={h.valor}>{h.etiqueta}</option>))}
                             </select>
@@ -96,6 +99,63 @@ const FormularioReserva = ({ onReservaCreada, preseleccion }) => {
                         </select>
                     </div>
                 </div>
+
+                {/* --- NUEVA SECCIÓN: PAGO ADELANTADO --- */}
+                <div className="col-span-1 md:col-span-2 mt-2 p-5 border border-border/50 rounded-xl bg-black/20">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={registrarPago} 
+                            onChange={(e) => {
+                                setRegistrarPago(e.target.checked);
+                                if (!e.target.checked) {
+                                    // Si desmarca, limpiamos el monto para que no se envíe al backend
+                                    handleChange({ target: { name: 'montoAbonado', value: '' } });
+                                }
+                            }} 
+                            className="w-5 h-5 accent-primary rounded bg-surface border-border" 
+                        />
+                        <span className="text-sm font-black text-white uppercase tracking-widest">
+                            Registrar Pago Ahora 💵
+                        </span>
+                    </label>
+
+                    {registrarPago && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5 animate-in slide-in-from-top-2">
+                            <div>
+                                <label className={labelClass}>Monto Entregado ($)</label>
+                                <input 
+                                    name="montoAbonado" 
+                                    type="number" 
+                                    min="1"
+                                    className={`${inputClass} border-green-500/50 focus:border-green-500`} 
+                                    placeholder="Ej: 2000" 
+                                    value={montoAbonado} 
+                                    onChange={handleChange} 
+                                    required={registrarPago} 
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Método de Pago</label>
+                                <select name="metodoPago" className={inputClass} value={metodoPago || 'EFECTIVO'} onChange={handleChange}>
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="TRANSFERENCIA">Transferencia / Billetera</option>
+                                    <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                                    <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                                    <option value="MERCADO_PAGO">Mercado Pago</option>
+                                </select>
+                            </div>
+                            
+                            {/* Aviso inteligente del Método Cascada */}
+                            {repetirSemanas > 1 && montoAbonado > 0 && (
+                                <div className="col-span-1 md:col-span-2 text-[10px] text-green-400 font-bold bg-green-500/10 p-3 rounded-lg border border-green-500/20 uppercase tracking-widest">
+                                    ℹ️ Método Cascada Activo: Los ${montoAbonado} cubrirán automáticamente las primeras fechas del mes.
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
             </div>
 
             <div className="mt-8 pt-6 border-t border-border flex justify-end relative z-10">

@@ -26,4 +26,8 @@ public class ReservaDTO {
     private String nombreCancha;
     private Integer repetirSemanas; 
     private String codigoTurnoFijo;
+
+    // --- NUEVO: PAGO ADELANTADO ---
+    private BigDecimal montoAbonado;
+    private String metodoPago;
 }
