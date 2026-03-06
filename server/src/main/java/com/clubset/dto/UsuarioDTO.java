@@ -27,9 +27,5 @@ public class UsuarioDTO {
 
     private BigDecimal deudaTotal;
     private Long partidosJugados;
-    private List<ReservaDTO> ultimasReservas;
-
-    // Password NO se devuelve aquí por seguridad
-    // Si necesitamos recibirla para crear, usaremos un "UsuarioCreateDTO" o el
-    // Entity en el Controller (como haces ahora)
+    private List<MovimientoPerfilDTO> ultimosMovimientos;
 }
