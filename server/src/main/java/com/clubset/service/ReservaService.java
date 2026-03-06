@@ -1,8 +1,8 @@
 package com.clubset.service;
 
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,9 +36,15 @@ public class ReservaService {
     private final CanchaRepository canchaRepository;
     private final PagoRepository pagoRepository;
 
-    // Constantes de negocio (Idealmente irían en application.properties)
-    private static final int HORA_APERTURA = 8;
-    private static final int HORA_CIERRE = 23;
+    // Inyectamos valores desde application.properties. Si no existen, usan el valor por defecto tras los dos puntos (:)
+    @Value("${club.horario.apertura:8}")
+    private int horaApertura;
+
+    @Value("${club.horario.cierre:23}")
+    private int horaCierre;
+
+    @Value("${club.precio.base:2000.00}")
+    private BigDecimal precioBase;
 
     public List<ReservaDTO> obtenerTodas() {
         return reservaRepository.findAll().stream()
@@ -47,7 +53,6 @@ public class ReservaService {
     }
 
     public List<ReservaDTO> obtenerPorFecha(LocalDate fecha) {
-        // Creamos el rango del día: desde las 00:00 hasta las 23:59:59
         LocalDateTime inicioDia = fecha.atStartOfDay();
         LocalDateTime finDia = fecha.atTime(LocalTime.MAX);
 
@@ -60,45 +65,36 @@ public class ReservaService {
     public List<ReservaDTO> guardarReserva(ReservaDTO dto) {
         log.info("Iniciando creación de reserva...");
 
-        // 1. Validaciones Básicas (Fecha, Hora, Pasado)
         validarReglasDeHorario(dto.getFechaHora());
 
-        // 2. Validar Cancha
         Cancha cancha = canchaRepository.findById(dto.getCanchaId())
-                .orElseThrow(() -> new RuntimeException("Error: La cancha no existe."));
+                .orElseThrow(() -> new IllegalArgumentException("Error: La cancha no existe."));
 
         if (!Boolean.TRUE.equals(cancha.getDisponible())) {
-            throw new RuntimeException("Esta cancha está en mantenimiento.");
+            throw new IllegalStateException("Esta cancha está en mantenimiento.");
         }
 
-        // 3. Validar Usuario o Invitado
         Usuario usuario = resolveUsuario(dto);
 
-        // 4. Lógica de Turno Fijo / Repetición
         int semanas = (dto.getRepetirSemanas() == null || dto.getRepetirSemanas() < 1) ? 1 : dto.getRepetirSemanas();
         String codigoGrupo = (semanas > 1) ? UUID.randomUUID().toString() : null;
 
-        // 5. Verificación de Disponibilidad (ATÓMICA: Chequear TODO antes de guardar
-        // NADA)
         for (int i = 0; i < semanas; i++) {
             LocalDateTime fechaChequeo = dto.getFechaHora().plusWeeks(i);
-
-            // Usamos el repositorio para detectar conflictos
             if (reservaRepository.existsByCanchaIdAndFechaHora(dto.getCanchaId(), fechaChequeo)) {
-                throw new RuntimeException(
-                        "Conflicto: La cancha ya está reservada para el día " + fechaChequeo.toString());
+                throw new IllegalStateException("Conflicto: La cancha ya está reservada para el día " + fechaChequeo.toString());
             }
         }
 
-        // 6. Persistencia de las Reservas
-        // Calculamos cuánto va a salir todo en total
-        BigDecimal precioInicial = (dto.getPrecio() != null) ? dto.getPrecio() : new BigDecimal("2000.00");
+        // Eliminamos el hardcodeo new BigDecimal("2000.00"). Usamos la propiedad inyectada.
+        // Lo ideal a futuro es que el precio venga de cancha.getPrecio()
+        BigDecimal precioInicial = (dto.getPrecio() != null) ? dto.getPrecio() : precioBase;
         BigDecimal totalEsperado = precioInicial.multiply(new BigDecimal(semanas));
 
-        // Validamos que no nos estén dando plata de más
         if (dto.getMontoAbonado() != null && dto.getMontoAbonado().compareTo(totalEsperado) > 0) {
-            throw new RuntimeException("El monto ingresado ($" + dto.getMontoAbonado() + ") supera el total de la reserva ($" + totalEsperado + ").");
+            throw new IllegalArgumentException("El monto ingresado ($" + dto.getMontoAbonado() + ") supera el total de la reserva ($" + totalEsperado + ").");
         }
+        
         List<Reserva> reservasCreadas = new ArrayList<>();
 
         for (int i = 0; i < semanas; i++) {
@@ -122,26 +118,15 @@ public class ReservaService {
             reservasCreadas.add(reservaRepository.save(reserva));
         }
 
-        // 7. LÓGICA FINANCIERA: Método Cascada 🌊
         BigDecimal saldoDisponible = dto.getMontoAbonado();
 
         if (saldoDisponible != null && saldoDisponible.compareTo(BigDecimal.ZERO) > 0) {
-
             for (Reserva res : reservasCreadas) {
-                if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0)
-                    break; // Se acabó la plata
+                if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0) break;
 
                 BigDecimal precioCancha = res.getPrecioPactado();
-                BigDecimal montoAImputar;
+                BigDecimal montoAImputar = (saldoDisponible.compareTo(precioCancha) >= 0) ? precioCancha : saldoDisponible;
 
-                // ¿Alcanza para pagar toda esta reserva o solo una parte?
-                if (saldoDisponible.compareTo(precioCancha) >= 0) {
-                    montoAImputar = precioCancha; // Pago completo
-                } else {
-                    montoAImputar = saldoDisponible; // Pago parcial
-                }
-
-                // Creamos el pago físico en la caja
                 Pago pago = new Pago();
                 pago.setMonto(montoAImputar);
                 pago.setMetodoPago(MetodoPago.valueOf(dto.getMetodoPago()));
@@ -152,69 +137,54 @@ public class ReservaService {
 
                 pagoRepository.save(pago);
 
-                // Actualizamos el estado de la reserva
                 res.getPagos().add(pago);
                 if (res.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
                     res.setPagado(true);
                 }
                 reservaRepository.save(res);
 
-                // Restamos la plata que ya usamos
                 saldoDisponible = saldoDisponible.subtract(montoAImputar);
             }
         }
 
         return reservasCreadas.stream().map(this::convertirADto).toList();
-
     }
 
-    // --- MÉTODOS PRIVADOS DE VALIDACIÓN (CLEAN CODE) ---
     private void validarReglasDeHorario(LocalDateTime fechaHora) {
-        // Regla 1: No viajar al pasado
         if (fechaHora.isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("No se pueden crear reservas en el pasado.");
+            throw new IllegalArgumentException("No se pueden crear reservas en el pasado.");
         }
-
-        // Regla 2: Turnos en punto (Simplificación actual)
         if (fechaHora.getMinute() != 0) {
-            throw new RuntimeException("Los turnos deben comenzar en hora en punto (ej: 18:00, no 18:30).");
+            throw new IllegalArgumentException("Los turnos deben comenzar en hora en punto (ej: 18:00, no 18:30).");
         }
-
-        // Regla 3: Horario del Club
-        int hora = fechaHora.getHour();
-        if (hora < HORA_APERTURA || hora >= HORA_CIERRE) {
-            throw new RuntimeException(
-                    "El club está cerrado. Horario de atención: " + HORA_APERTURA + "hs a " + HORA_CIERRE + "hs.");
+        if (fechaHora.getHour() < horaApertura || fechaHora.getHour() >= horaCierre) {
+            throw new IllegalArgumentException("El club está cerrado. Horario de atención: " + horaApertura + "hs a " + horaCierre + "hs.");
         }
     }
 
     private Usuario resolveUsuario(ReservaDTO dto) {
         if (dto.getUsuarioId() != null) {
             return usuarioRepository.findById(dto.getUsuarioId())
-                    .orElseThrow(() -> new RuntimeException("Error: El usuario no existe."));
+                    .orElseThrow(() -> new IllegalArgumentException("Error: El usuario no existe."));
         } else {
-            // Es invitado, validamos datos de contacto
             if (dto.getNombreContacto() == null || dto.getNombreContacto().trim().isEmpty()) {
-                throw new RuntimeException("Debe ingresar el Nombre del invitado.");
+                throw new IllegalArgumentException("Debe ingresar el Nombre del invitado.");
             }
             if (dto.getTelefonoContacto() == null || dto.getTelefonoContacto().trim().isEmpty()) {
-                throw new RuntimeException("Debe ingresar un Teléfono.");
+                throw new IllegalArgumentException("Debe ingresar un Teléfono.");
             }
             return null;
         }
     }
 
-    // --- MÉTODOS DE PAGO Y OTROS (Sin cambios mayores, solo mantenidos) ---
-
     @Transactional
     public ReservaDTO registrarPago(Long reservaId, BigDecimal monto, MetodoPago metodo, String observacion) {
         Reserva reserva = reservaRepository.findById(reservaId)
-                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
 
         BigDecimal saldoActual = reserva.getSaldoPendiente();
         if (monto.compareTo(saldoActual) > 0) {
-            throw new RuntimeException(
-                    "Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
+            throw new IllegalArgumentException("Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
         }
 
         Pago pago = new Pago();
@@ -222,7 +192,7 @@ public class ReservaService {
         pago.setMetodoPago(metodo);
         pago.setFechaPago(LocalDateTime.now());
         pago.setObservacion(observacion);
-        pago.setTipoMovimiento(TipoMovimiento.INGRESO); // Aseguramos que es un ingreso
+        pago.setTipoMovimiento(TipoMovimiento.INGRESO);
         pago.setReserva(reserva);
 
         pagoRepository.save(pago);
@@ -240,11 +210,10 @@ public class ReservaService {
     @Transactional
     public void cancelarReserva(Long id) {
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva no encontrada."));
+                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada."));
 
-        // ESCUDO FINANCIERO: ¿Tiene pagos?
         if (!reserva.getPagos().isEmpty()) {
-            throw new RuntimeException("CONTABILIDAD: No se puede eliminar una reserva que tiene pagos registrados. Si es un error, el administrador debe ajustar la caja primero.");
+            throw new IllegalStateException("CONTABILIDAD: No se puede eliminar una reserva que tiene pagos registrados. Ajuste la caja primero.");
         }
 
         reservaRepository.delete(reserva);
@@ -254,10 +223,9 @@ public class ReservaService {
     public void cancelarTurnoFijo(String codigo) {
         List<Reserva> reservasDelGrupo = reservaRepository.findByCodigoTurnoFijo(codigo);
         
-        // ESCUDO FINANCIERO GRUPAL: Revisamos si alguna de las reservas del mes ya tiene plata
         for (Reserva res : reservasDelGrupo) {
             if (!res.getPagos().isEmpty()) {
-                throw new RuntimeException("CONTABILIDAD: Este turno fijo ya tiene pagos asociados en una o más fechas. No se puede eliminar en bloque para proteger la caja.");
+                throw new IllegalStateException("CONTABILIDAD: Este turno fijo ya tiene pagos asociados en una o más fechas. No se puede eliminar en bloque.");
             }
         }
 
@@ -266,7 +234,7 @@ public class ReservaService {
 
     public ReservaDTO togglePago(Long id) {
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
         reserva.setPagado(!reserva.getPagado());
         return convertirADto(reservaRepository.save(reserva));
     }
