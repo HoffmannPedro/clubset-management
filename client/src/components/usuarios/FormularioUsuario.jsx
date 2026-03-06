@@ -12,13 +12,13 @@ const FormularioUsuario = ({ onUsuarioCreado, usuarioAEditar, onCancelar }) => {
     const labelClass = "block text-[10px] font-bold uppercase tracking-wider text-textMuted mb-2 ml-1";
 
     return (
-        <div className={`bg-surface p-6 md:p-10 border border-border shadow-2xl rounded-2xl max-w-4xl mx-auto transition-all duration-500 ${isEditing ? 'ring-2 ring-secondary/50' : ''}`}>
+        <div className={`bg-surface p-5 sm:p-8 md:p-10 border border-border shadow-2xl rounded-2xl max-w-4xl mx-auto transition-all duration-500 relative overflow-hidden ${isEditing ? 'ring-2 ring-secondary/50' : ''}`}>
             
             {/* ENCABEZADO DINÁMICO */}
             <div className="flex items-center gap-4 mb-8 pb-4 border-b border-border">
                 <div className={`h-10 w-1.5 rounded-full shadow-[0_0_10px_rgba(201,106,61,0.5)] transition-colors ${isEditing ? 'bg-blue-500 shadow-blue-500/50' : 'bg-secondary'}`}></div>
                 <div>
-                    <h3 className="text-2xl font-black text-text uppercase italic tracking-tighter leading-none">
+                    <h3 className="text-xl md:text-2xl font-black text-text uppercase italic tracking-tighter leading-none">
                         {isEditing ? 'Editar Miembro' : 'Alta de Miembro'}
                     </h3>
                     <p className="text-xs text-textMuted font-bold uppercase tracking-widest mt-1">
