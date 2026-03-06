@@ -1,7 +1,6 @@
-import { useGrillaReservas } from '../../hooks/useGrillaReservas';
 
-const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
-    
+const GrillaReservas = ({ data, onEmptySlotClick }) => {
+
     const {
         canchas,
         horas,
@@ -9,7 +8,7 @@ const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
         setFechaSeleccionada,
         buscarReserva,
         handleReservaClick
-    } = useGrillaReservas(refreshKey);
+    } = data;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -58,7 +57,7 @@ const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
                                 </td>
 
                                 {canchas.map(c => {
-                                    
+
                                     // 🛑 1. BLOQUEO POR MANTENIMIENTO
                                     // Si la cancha NO está disponible, renderizamos celda muerta inmediatamente.
                                     if (!c.disponible) {
@@ -75,19 +74,19 @@ const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
 
                                     // Si pasa el chequeo, buscamos si hay reserva
                                     const reserva = buscarReserva(c.id, hora);
-                                    
+
                                     return (
                                         <td key={`${c.id}-${hora}`} className="p-1 border-b border-border border-dashed h-[60px]">
                                             {reserva ? (
                                                 /* --- RESERVA OCUPADA --- */
-                                                <div 
+                                                <div
                                                     onClick={() => handleReservaClick(reserva)}
                                                     className={`
                                                         group relative cursor-pointer transition-all duration-300 h-full w-full
                                                         border rounded-lg text-xs font-bold text-center shadow-sm
                                                         flex items-center justify-center hover:scale-[1.02] hover:shadow-lg
-                                                        ${reserva.pagado 
-                                                            ? 'bg-green-500/10 border-green-500 text-green-600' 
+                                                        ${reserva.pagado
+                                                            ? 'bg-green-500/10 border-green-500 text-green-600'
                                                             : 'bg-terciary/10 border-terciary text-terciary'
                                                         }
                                                     `}
@@ -102,7 +101,7 @@ const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
                                                 </div>
                                             ) : (
                                                 /* --- ESPACIO VACÍO (DISPONIBLE) --- */
-                                                <div 
+                                                <div
                                                     onClick={() => onEmptySlotClick(c.id, hora, fechaSeleccionada)}
                                                     className="h-full w-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer group"
                                                 >
@@ -119,7 +118,7 @@ const GrillaReservas = ({ refreshKey, onEmptySlotClick }) => {
                     </tbody>
                 </table>
             </div>
-            
+
             <p className="text-center text-[10px] text-textMuted sm:hidden italic">
                 ← Desliza horizontalmente para ver más canchas →
             </p>

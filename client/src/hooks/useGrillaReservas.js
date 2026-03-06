@@ -103,6 +103,7 @@ export const useGrillaReservas = (refreshKey) => {
     return {
         canchas,
         horas,
+        reservas,
         fechaSeleccionada,
         setFechaSeleccionada,
         buscarReserva,

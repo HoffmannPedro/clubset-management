@@ -10,6 +10,7 @@ import GrillaReservas from '../reservas/GrillaReservas';
 import CajaView from '../caja/CajaView';
 import DashboardView from '../dashboard/DashboardView';
 import PerfilUsuario from '../usuarios/PerfilUsuario'; // <--- 1. Importado
+import GestionReservasView from '../reservas/GestionReservasView'; // Asegurate de importar esto arriba
 import { deleteUsuario } from '../../services/usuarioService';
 
 const AdminPanel = () => {
@@ -135,11 +136,11 @@ const AdminPanel = () => {
 
                         {isAdmin && activeTab === 'usuarios' && (
                             <div className="space-y-8 animate-in slide-in-from-bottom-4">
-                                
+
                                 {/* 4. Renderizado Condicional: Lista o Perfil */}
                                 {usuarioInspeccionado ? (
                                     <div>
-                                        <button 
+                                        <button
                                             onClick={handleVolverALista}
                                             className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-textMuted hover:text-primary transition-colors"
                                         >
@@ -169,16 +170,12 @@ const AdminPanel = () => {
                         )}
 
                         {isAdmin && activeTab === 'reservas' && (
-                            <div className="space-y-8 animate-in slide-in-from-bottom-4">
-                                <FormularioReserva
-                                    onReservaCreada={handleReservaExitosa}
-                                    preseleccion={seleccionGrilla}
-                                />
-                                <GrillaReservas
-                                    refreshKey={refreshTrigger}
-                                    onEmptySlotClick={handleSlotClick}
-                                />
-                            </div>
+                            <GestionReservasView
+                                refreshKey={refreshTrigger}
+                                onReservaExitosa={handleReservaExitosa}
+                                preseleccion={seleccionGrilla}
+                                onEmptySlotClick={handleSlotClick}
+                            />
                         )}
 
                     </div>
