@@ -8,6 +8,9 @@ import com.clubset.entity.Usuario;
 import com.clubset.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
+import jakarta.validation.Valid;
+import com.clubset.dto.UsuarioRegistroRequestDTO;
+import com.clubset.dto.UsuarioActualizacionRequestDTO;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -28,8 +31,8 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public UsuarioDTO crearUsuario(@RequestBody Usuario usuario) {
-        return usuarioService.guardarUsuario(usuario);
+    public UsuarioDTO crearUsuario(@Valid @RequestBody UsuarioRegistroRequestDTO requestDTO) {
+        return usuarioService.guardarDesdeRegistro(requestDTO);
     }
 
     // GET /api/usuarios/me -> Devuelve el perfil del usuario logueado
@@ -47,10 +50,8 @@ public class UsuarioController {
 
     // PUT: Actualizar usuario existente
     @PutMapping("/{id}")
-    public UsuarioDTO actualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuario) {
-        // Aseguramos que el ID del body coincida con el del path
-        usuario.setId(id);
-        return usuarioService.guardarUsuario(usuario); // save() funciona como update si tiene ID
+    public UsuarioDTO actualizarUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioActualizacionRequestDTO requestDTO) {
+        return usuarioService.actualizarDesdeDTO(id, requestDTO);
     }
     
     @DeleteMapping("/{id}")
@@ -60,7 +61,7 @@ public class UsuarioController {
 
     // PUT: Actualizar MI perfil (Autogestión segura)
     @PutMapping("/me")
-    public UsuarioDTO actualizarMiPerfil(@RequestBody Usuario actualizacion) {
+    public UsuarioDTO actualizarMiPerfil(@Valid @RequestBody UsuarioActualizacionRequestDTO actualizacion) {
         // 1. Obtenemos quién es el usuario logueado gracias al Token
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();

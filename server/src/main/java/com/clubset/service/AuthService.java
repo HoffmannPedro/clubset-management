@@ -8,6 +8,7 @@ import com.clubset.entity.Usuario;
 import com.clubset.enums.Categoria;
 import com.clubset.enums.Genero;
 import com.clubset.enums.Mano;
+import com.clubset.enums.RolUsuario;
 import com.clubset.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,7 +37,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setTelefono(request.getTelefono());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // ENCRIPTAMOS
-        user.setRol("SOCIO"); // Por defecto todos son SOCIOS al registrarse públicamente
+        user.setRol(RolUsuario.SOCIO); // Por defecto todos son SOCIOS al registrarse públicamente
         
         // Datos deportivos
         user.setCategoria(cat);

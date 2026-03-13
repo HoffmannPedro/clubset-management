@@ -29,7 +29,9 @@ public class Usuario implements UserDetails {
 
     private String telefono;
     private String password;
-    private String rol;
+
+    @Enumerated(EnumType.STRING)
+    private RolUsuario rol;
 
     // --- Perfil Deportivo (Tus campos existentes) ---
     @Enumerated(EnumType.STRING)
@@ -48,13 +50,11 @@ public class Usuario implements UserDetails {
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore // Evita bucles infinitos si alguna vez devolvemos la entidad directa
-    private List<Reserva> reservas;
-
     // --- MÉTODOS DE USER DETAILS (OBLIGATORIOS) ---
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convierte tu String "ADMIN" en un Rol de Spring Security
-        return List.of(new SimpleGrantedAuthority("ROLE_" + rol));
+        // Convierte tu Enum en un Rol de Spring Security
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.name()));
     }
 
     @Override

@@ -9,7 +9,9 @@ import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
 import com.clubset.mapper.UsuarioMapper;
 import com.clubset.dto.MovimientoPerfilDTO;
-
+import com.clubset.dto.UsuarioRegistroRequestDTO;
+import com.clubset.dto.UsuarioActualizacionRequestDTO;
+import com.clubset.enums.RolUsuario;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,27 @@ public class UsuarioService {
         return usuarioRepository.findAll().stream()
                 .map(this::ensamblarPerfil)
                 .toList();
+    }
+
+    public UsuarioDTO guardarDesdeRegistro(UsuarioRegistroRequestDTO dto) {
+        Usuario usuario = new Usuario();
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setEmail(dto.getEmail());
+        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        usuario.setRol(RolUsuario.USER); 
+        usuario.setPuntosRanking(0);
+        
+        usuarioRepository.save(usuario);
+        return ensamblarPerfil(usuario);
+    }
+
+    public UsuarioDTO actualizarDesdeDTO(Long id, UsuarioActualizacionRequestDTO dto) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                
+        actualizarCamposSeguros(usuario, dto);
+        return ensamblarPerfil(usuarioRepository.save(usuario));
     }
 
     public UsuarioDTO guardarUsuario(Usuario usuario) {
@@ -75,11 +98,16 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioDTO actualizarPerfilPropio(String email, Usuario datosNuevos) {
+    public UsuarioDTO actualizarPerfilPropio(String email, UsuarioActualizacionRequestDTO datosNuevos) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // BLINDAJE DE SEGURIDAD: Solo actualizamos lo que el usuario tiene permitido tocar
+        actualizarCamposSeguros(usuario, datosNuevos);
+
+        return ensamblarPerfil(usuarioRepository.save(usuario));
+    }
+
+    private void actualizarCamposSeguros(Usuario usuario, UsuarioActualizacionRequestDTO datosNuevos) {
         if (datosNuevos.getNombre() != null && !datosNuevos.getNombre().isBlank()) {
             usuario.setNombre(datosNuevos.getNombre());
         }
@@ -92,8 +120,9 @@ public class UsuarioService {
         if (datosNuevos.getFotoPerfilUrl() != null) {
             usuario.setFotoPerfilUrl(datosNuevos.getFotoPerfilUrl());
         }
-
-        return ensamblarPerfil(usuarioRepository.save(usuario));
+        if (datosNuevos.getManoHabil() != null) {
+            usuario.setManoHabil(datosNuevos.getManoHabil());
+        }
     }
 
     // Mapper actualizado
