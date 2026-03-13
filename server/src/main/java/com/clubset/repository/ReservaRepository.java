@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.clubset.entity.Reserva;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List; // <--- Importante
 
@@ -17,6 +17,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
         List<Reserva> findByFechaHoraBetween(LocalDateTime inicio, LocalDateTime fin);
 
         List<Reserva> findByUsuarioIdAndPagadoFalse(Long usuarioId);
+        
+        List<Reserva> findByUsuarioId(Long usuarioId);
 
         List<Reserva> findTop5ByUsuarioIdOrderByFechaHoraDesc(Long usuarioId);
 
@@ -27,4 +29,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
         @Modifying
         @Query("DELETE FROM Reserva r WHERE r.codigoTurnoFijo = :codigo")
         void deleteByCodigoTurnoFijo(@Param("codigo") String codigo);
+
+        @Query("SELECT SUM(r.precioPactado - (SELECT COALESCE(SUM(p.monto), 0) FROM Pago p WHERE p.reserva = r)) " +
+                        "FROM Reserva r WHERE r.usuario.id = :usuarioId AND r.pagado = false")
+        BigDecimal calcularDeudaTotalUsuario(@Param("usuarioId") Long usuarioId);
 }

@@ -8,7 +8,6 @@ import com.clubset.enums.MetodoPago;
 import com.clubset.enums.TipoMovimiento;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(name = "pagos")

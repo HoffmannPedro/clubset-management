@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
-// Asegurate de importar la función que creaste o hacer la llamada axios directa
-// import { actualizarMiPerfil } from '../../services/usuarioService'; 
+import { formatearConceptoMovimiento } from '../../utils/formatters';
 
 const PerfilUsuario = ({ usuarioId = null }) => {
     const [perfil, setPerfil] = useState(null);
@@ -170,50 +169,95 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                 </div>
             </div>
 
-            <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-lg">
-                <div className="p-6 border-b border-border bg-black/20">
-                    <h3 className="text-lg font-black text-text italic">Últimos Movimientos</h3>
+            {/* --- SECCIÓN: HISTORIAL FINANCIERO (LIBRO MAYOR) --- */}
+            <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-lg mt-8">
+                <div className="p-6 border-b border-border bg-black/20 flex justify-between items-center">
+                    <h3 className="text-lg font-black text-text italic">Historial de Cuenta</h3>
+                    <span className="text-[10px] text-textMuted font-bold uppercase tracking-widest">Últimos 5 movimientos</span>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* --- VERSIÓN ESCRITORIO (Tabla) --- */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs text-textMuted uppercase bg-white/5 font-black">
                             <tr>
                                 <th className="px-6 py-4">Fecha</th>
-                                <th className="px-6 py-4">Cancha</th>
+                                <th className="px-6 py-4">Concepto</th>
                                 <th className="px-6 py-4 text-center">Estado</th>
-                                <th className="px-6 py-4 text-right">Saldo</th>
+                                <th className="px-6 py-4 text-right">Monto</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                            {perfil.ultimasReservas && perfil.ultimasReservas.length > 0 ? (
-                                perfil.ultimasReservas.map((reserva) => (
-                                    <tr key={reserva.id} className="hover:bg-white/5 transition-colors">
+                            {perfil.ultimosMovimientos && perfil.ultimosMovimientos.length > 0 ? (
+                                perfil.ultimosMovimientos.map((movimiento, index) => (
+                                    <tr key={index} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-bold">
-                                            {new Date(reserva.fechaHora).toLocaleDateString()}
+                                            {new Date(movimiento.fecha).toLocaleDateString()}
                                             <span className="text-textMuted ml-2 font-normal">
-                                                {new Date(reserva.fechaHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}hs
+                                                {new Date(movimiento.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}hs
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-primary font-bold uppercase">{reserva.nombreCancha}</td>
+                                        <td className="px-6 py-4 font-bold text-text uppercase">
+                                            {formatearConceptoMovimiento(movimiento.concepto)}
+                                        </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${reserva.pagado ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                                                {reserva.pagado ? 'Pagado' : 'Pendiente'}
+                                            <span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${movimiento.estado === 'PAGADO' || movimiento.estado === 'COMPLETADO' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                                                {movimiento.estado}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-mono text-textMuted">
-                                            {reserva.saldoPendiente > 0 ? `$${reserva.saldoPendiente}` : '-'}
+                                        <td className="px-6 py-4 text-right font-mono font-bold">
+                                            <span className={movimiento.tipo === 'CARGO' ? 'text-red-400' : 'text-green-400'}>
+                                                {movimiento.tipo === 'CARGO' ? '-' : '+'}${movimiento.monto}
+                                            </span>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-textMuted italic">
-                                        Sin actividad reciente.
+                                    <td colSpan="4" className="px-6 py-8 text-center text-textMuted italic font-bold">
+                                        Sin movimientos registrados.
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* --- VERSIÓN MÓVIL (Tarjetas) --- */}
+                <div className="grid grid-cols-1 gap-3 p-4 md:hidden bg-background/30">
+                    {perfil.ultimosMovimientos && perfil.ultimosMovimientos.length > 0 ? (
+                        perfil.ultimosMovimientos.map((movimiento, index) => (
+                            <div key={index} className="bg-surface border border-border rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                                <div className="flex justify-between items-start border-b border-border/50 pb-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black text-textMuted tracking-widest uppercase">
+                                            {new Date(movimiento.fecha).toLocaleDateString()}
+                                        </span>
+                                        <span className="text-[10px] text-textMuted font-bold">
+                                            {new Date(movimiento.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}hs
+                                        </span>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${movimiento.estado === 'PAGADO' || movimiento.estado === 'COMPLETADO' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                                        {movimiento.estado}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between items-end pt-1">
+                                    <span className="font-bold text-sm text-text uppercase max-w-[60%] leading-tight">{formatearConceptoMovimiento(movimiento.concepto)}</span>
+                                    <div className="flex flex-col items-end shrink-0">
+                                        <span className="text-[9px] font-bold text-textMuted uppercase">{movimiento.tipo}</span>
+                                        <span className={`font-black text-lg font-mono tracking-tighter ${movimiento.tipo === 'CARGO' ? 'text-red-400' : 'text-green-400'}`}>
+                                            {movimiento.tipo === 'CARGO' ? '-' : '+'}${movimiento.monto}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-6 text-center text-textMuted italic font-bold border border-dashed border-border rounded-xl">
+                            Sin movimientos registrados.
+                        </div>
+                    )}
                 </div>
             </div>
 

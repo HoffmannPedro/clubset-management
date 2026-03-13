@@ -1,14 +1,15 @@
 package com.clubset.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder; // <--- 1. NUEVO IMPORT
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.clubset.dto.ReservaDTO;
 import com.clubset.dto.UsuarioDTO;
-import com.clubset.entity.Reserva;
 import com.clubset.entity.Usuario;
 import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
+import com.clubset.mapper.UsuarioMapper;
+import com.clubset.dto.MovimientoPerfilDTO;
+
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +24,13 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final ReservaRepository reservaRepository;
+    private final FinanzasService finanzasService; // Inyectamos el calculador financiero
+    private final UsuarioMapper usuarioMapper;
+    
 
     public List<UsuarioDTO> obtenerTodosLosUsuarios() {
         return usuarioRepository.findAll().stream()
-                .map(this::convertirADto)
+                .map(this::ensamblarPerfil)
                 .toList();
     }
 
@@ -48,19 +52,18 @@ public class UsuarioService {
         // if (usuario.getId() == null && usuarioRepository.existsByEmail(usuario.getEmail())) ...
 
         usuarioRepository.save(usuario);
-        return convertirADto(usuario);
+        return ensamblarPerfil(usuario);
     }
     
     public UsuarioDTO obtenerPorId(Long id) {
         return usuarioRepository.findById(id)
-                .map(this::convertirADto)
+                .map(this::ensamblarPerfil)
                 .orElse(null);
     }
 
     public UsuarioDTO buscarPorEmail(String email) {
-        // Usamos el mismo repositorio que ya configuraste para el Auth
         return usuarioRepository.findByEmail(email)
-                .map(this::convertirADto)
+                .map(this::ensamblarPerfil)
                 .orElse(null);
     }
 
@@ -90,56 +93,24 @@ public class UsuarioService {
             usuario.setFotoPerfilUrl(datosNuevos.getFotoPerfilUrl());
         }
 
-        return convertirADto(usuarioRepository.save(usuario));
+        return ensamblarPerfil(usuarioRepository.save(usuario));
     }
 
     // Mapper actualizado
-    private UsuarioDTO convertirADto(Usuario usuario) {
-        UsuarioDTO dto = new UsuarioDTO();
-        dto.setId(usuario.getId());
-        dto.setNombre(usuario.getNombre());
-        dto.setApellido(usuario.getApellido());
-        dto.setEmail(usuario.getEmail());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setRol(usuario.getRol());
-        dto.setCategoria(usuario.getCategoria());
-        dto.setGenero(usuario.getGenero());
-        dto.setManoHabil(usuario.getManoHabil());
-        dto.setPuntosRanking(usuario.getPuntosRanking());
-        dto.setFotoPerfilUrl(usuario.getFotoPerfilUrl());
+    private UsuarioDTO ensamblarPerfil(Usuario usuario) {
+        // 1. Cálculos pesados delegados a SQL
+        BigDecimal deudaBD = reservaRepository.calcularDeudaTotalUsuario(usuario.getId());
+        BigDecimal deudaFinal = deudaBD != null ? deudaBD : BigDecimal.ZERO;
         
-        // --- 1. CÁLCULO DE DEUDA (CORREGIDO) ---
-        // Traemos las reservas impagas
-        List<Reserva> reservasImpagas = reservaRepository.findByUsuarioIdAndPagadoFalse(usuario.getId());
-        
-        // Sumamos el saldo pendiente de cada una usando Java
-        // (Esto asume que tu entidad Reserva tiene el método getSaldoPendiente())
-        BigDecimal deuda = reservasImpagas.stream()
-                .map(Reserva::getSaldoPendiente) 
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Long partidos = reservaRepository.countByUsuarioId(usuario.getId());
 
-        dto.setDeudaTotal(deuda);
-        // ---------------------------------------
+        // 2. Historial financiero (limitado a 5 para el perfil)
+        List<MovimientoPerfilDTO> movimientos = finanzasService.obtenerHistorialFinanciero(usuario.getId())
+                .stream()
+                .limit(5)
+                .toList();
 
-        // 2. Estadísticas
-        dto.setPartidosJugados(reservaRepository.countByUsuarioId(usuario.getId()));
-
-        // 3. Historial
-        List<Reserva> ultimas = reservaRepository.findTop5ByUsuarioIdOrderByFechaHoraDesc(usuario.getId());
-        
-        List<ReservaDTO> historialDtos = ultimas.stream().map(r -> {
-            ReservaDTO rDto = new ReservaDTO();
-            rDto.setId(r.getId());
-            rDto.setFechaHora(r.getFechaHora());
-            rDto.setNombreCancha(r.getCancha().getNombre());
-            rDto.setPagado(r.getPagado());
-            rDto.setSaldoPendiente(r.getSaldoPendiente());
-            rDto.setEstado(r.getEstado());
-            return rDto;
-        }).toList();
-        
-        dto.setUltimasReservas(historialDtos);
-
-        return dto;
+        // 3. MapStruct hace la magia de unir la entidad con los cálculos
+        return usuarioMapper.toDTO(usuario, deudaFinal, partidos, movimientos);
     }
 }

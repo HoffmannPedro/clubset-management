@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'; // Agregamos useEffect
-// Importamos updateUsuario (asegúrate de tenerlo en el servicio, ver paso 2)
-import { createUsuario, updateUsuario } from '../services/usuarioService'; 
+import { useState, useEffect } from 'react';
+import { createUsuario, updateUsuario } from '../services/usuarioService';
 import { mostrarAlerta } from '../utils/alertas';
 
 export const useUsuarioForm = (onSuccess, usuarioAEditar) => {

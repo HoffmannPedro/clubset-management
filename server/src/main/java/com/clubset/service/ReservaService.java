@@ -2,7 +2,12 @@ package com.clubset.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,17 +177,42 @@ public class ReservaService {
     }
 
     private Usuario resolveUsuario(ReservaDTO dto) {
-        if (dto.getUsuarioId() != null) {
-            return usuarioRepository.findById(dto.getUsuarioId())
-                    .orElseThrow(() -> new IllegalArgumentException("Error: El usuario no existe."));
+        // 1. Obtenemos la identidad real de quien hace la petición desde el token
+        // validado
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailAutenticado = auth.getName();
+
+        // 2. Buscamos al usuario que está ejecutando la acción
+        Usuario usuarioEjecutor = usuarioRepository.findByEmail(emailAutenticado)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Error de seguridad: Usuario autenticado no encontrado en el sistema."));
+
+        // 3. Verificamos si es un administrador
+        boolean isAdmin = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(rol -> rol.equals("ROLE_ADMIN") || rol.equals("ROLE_EMPLEADO"));
+
+        if (isAdmin) {
+            // ESCENARIO B (Administrador): Tiene permiso para asignar reservas a otros o a
+            // invitados
+            if (dto.getUsuarioId() != null) {
+                return usuarioRepository.findById(dto.getUsuarioId())
+                        .orElseThrow(() -> new IllegalArgumentException("Error: El socio seleccionado no existe."));
+            } else {
+                // Es una reserva para un invitado sin cuenta
+                if (dto.getNombreContacto() == null || dto.getNombreContacto().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Debe ingresar el Nombre del invitado.");
+                }
+                if (dto.getTelefonoContacto() == null || dto.getTelefonoContacto().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Debe ingresar un Teléfono.");
+                }
+                return null;
+            }
         } else {
-            if (dto.getNombreContacto() == null || dto.getNombreContacto().trim().isEmpty()) {
-                throw new IllegalArgumentException("Debe ingresar el Nombre del invitado.");
-            }
-            if (dto.getTelefonoContacto() == null || dto.getTelefonoContacto().trim().isEmpty()) {
-                throw new IllegalArgumentException("Debe ingresar un Teléfono.");
-            }
-            return null;
+            // ESCENARIO A (Socio/Jugador): Solo puede reservar para SÍ MISMO.
+            // Ignoramos olímpicamente el usuarioId que venga en el DTO (Evita
+            // vulnerabilidad IDOR)
+            return usuarioEjecutor;
         }
     }
 
