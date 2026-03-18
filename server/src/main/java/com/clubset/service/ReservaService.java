@@ -5,9 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +15,7 @@ import com.clubset.entity.Reserva;
 import com.clubset.entity.Usuario;
 import com.clubset.enums.MetodoPago;
 import com.clubset.enums.TipoMovimiento;
+import com.clubset.enums.RolUsuario;
 import com.clubset.mapper.ReservaMapper;
 import com.clubset.repository.CanchaRepository;
 import com.clubset.repository.PagoRepository;
@@ -70,7 +68,7 @@ public class ReservaService {
     }
 
     @Transactional
-    public List<ReservaDTO> guardarReserva(ReservaDTO dto) {
+    public List<ReservaDTO> guardarReserva(ReservaDTO dto, String emailAutenticado) {
         log.info("Iniciando creación de reserva...");
 
         validarReglasDeHorario(dto.getFechaHora());
@@ -82,7 +80,7 @@ public class ReservaService {
             throw new IllegalStateException("Esta cancha está en mantenimiento.");
         }
 
-        Usuario usuario = resolveUsuario(dto);
+        Usuario usuario = resolveUsuario(dto, emailAutenticado);
 
         int semanas = (dto.getRepetirSemanas() == null || dto.getRepetirSemanas() < 1) ? 1 : dto.getRepetirSemanas();
         String codigoGrupo = (semanas > 1) ? UUID.randomUUID().toString() : null;
@@ -176,25 +174,16 @@ public class ReservaService {
         }
     }
 
-    private Usuario resolveUsuario(ReservaDTO dto) {
-        // 1. Obtenemos la identidad real de quien hace la petición desde el token
-        // validado
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String emailAutenticado = auth.getName();
-
-        // 2. Buscamos al usuario que está ejecutando la acción
+    private Usuario resolveUsuario(ReservaDTO dto, String emailAutenticado) {
+        // 1. Buscamos al usuario que está ejecutando la acción puramente por su email
         Usuario usuarioEjecutor = usuarioRepository.findByEmail(emailAutenticado)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Error de seguridad: Usuario autenticado no encontrado en el sistema."));
+                .orElseThrow(() -> new SecurityException("Error de seguridad: Usuario autenticado no encontrado en el sistema."));
 
-        // 3. Verificamos si es un administrador
-        boolean isAdmin = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(rol -> rol.equals("ROLE_ADMIN") || rol.equals("ROLE_EMPLEADO"));
+        // 2. Verificamos si es un administrador según el dominio
+        boolean isAdmin = usuarioEjecutor.getRol() == RolUsuario.ADMIN; // Expandible a EMPLEADO si lo agregas luego
 
         if (isAdmin) {
-            // ESCENARIO B (Administrador): Tiene permiso para asignar reservas a otros o a
-            // invitados
+            // ESCENARIO B (Administrador): Tiene permiso para asignar reservas a otros o a invitados
             if (dto.getUsuarioId() != null) {
                 return usuarioRepository.findById(dto.getUsuarioId())
                         .orElseThrow(() -> new IllegalArgumentException("Error: El socio seleccionado no existe."));
@@ -210,8 +199,7 @@ public class ReservaService {
             }
         } else {
             // ESCENARIO A (Socio/Jugador): Solo puede reservar para SÍ MISMO.
-            // Ignoramos olímpicamente el usuarioId que venga en el DTO (Evita
-            // vulnerabilidad IDOR)
+            // Ignoramos olímpicamente el usuarioId que venga en el DTO (Evita vulnerabilidad IDOR)
             return usuarioEjecutor;
         }
     }
@@ -248,9 +236,11 @@ public class ReservaService {
     }
 
     @Transactional
-    public void cancelarReserva(Long id) {
+    public void cancelarReserva(Long id, String emailAutenticado) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada."));
+
+        validarPermisoCancelacion(reserva, emailAutenticado);
 
         if (!reserva.getPagos().isEmpty()) {
             throw new IllegalStateException(
@@ -261,8 +251,12 @@ public class ReservaService {
     }
 
     @Transactional
-    public void cancelarTurnoFijo(String codigo) {
+    public void cancelarTurnoFijo(String codigo, String emailAutenticado) {
         List<Reserva> reservasDelGrupo = reservaRepository.findByCodigoTurnoFijo(codigo);
+
+        if (!reservasDelGrupo.isEmpty()) {
+             validarPermisoCancelacion(reservasDelGrupo.get(0), emailAutenticado);
+        }
 
         for (Reserva res : reservasDelGrupo) {
             if (!res.getPagos().isEmpty()) {
@@ -272,6 +266,18 @@ public class ReservaService {
         }
 
         reservaRepository.deleteByCodigoTurnoFijo(codigo);
+    }
+
+    private void validarPermisoCancelacion(Reserva reserva, String emailAutenticado) {
+        Usuario usuarioAutenticado = usuarioRepository.findByEmail(emailAutenticado)
+                .orElseThrow(() -> new SecurityException("Error de seguridad: Usuario no encontrado."));
+
+        boolean isAdmin = usuarioAutenticado.getRol() == RolUsuario.ADMIN;
+        boolean isPropietario = reserva.getUsuario() != null && reserva.getUsuario().getEmail().equals(emailAutenticado);
+
+        if (!isAdmin && !isPropietario) {
+            throw new SecurityException("Acceso denegado: No tienes permiso para cancelar esta reserva.");
+        }
     }
 
     public ReservaDTO togglePago(Long id) {

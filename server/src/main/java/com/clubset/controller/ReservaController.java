@@ -11,6 +11,7 @@ import com.clubset.enums.MetodoPago;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -30,27 +31,27 @@ public class ReservaController {
     }
 
     @PostMapping
-    public ResponseEntity<List<ReservaDTO>> crear(@RequestBody ReservaDTO reservaDTO) {
+    public ResponseEntity<List<ReservaDTO>> crear(@RequestBody ReservaDTO reservaDTO, Principal principal) {
         // Cero lógica, cero manejo de errores. Solo delegar.
-        return ResponseEntity.ok(reservaService.guardarReserva(reservaDTO));
+        return ResponseEntity.ok(reservaService.guardarReserva(reservaDTO, principal.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> cancelar(@PathVariable Long id) {
-        reservaService.cancelarReserva(id);
+    public ResponseEntity<String> cancelar(@PathVariable Long id, Principal principal) {
+        reservaService.cancelarReserva(id, principal.getName());
         return ResponseEntity.ok("Reserva cancelada correctamente");
     }
     
     @DeleteMapping("/{id}/completo")
-    public ResponseEntity<String> cancelarGrupo(@PathVariable Long id) {
+    public ResponseEntity<String> cancelarGrupo(@PathVariable Long id, Principal principal) {
         String codigo = reservaService.obtenerCodigoPorReservaId(id);
         
         if (codigo == null) {
-            reservaService.cancelarReserva(id);
+            reservaService.cancelarReserva(id, principal.getName());
             return ResponseEntity.ok("Reserva única eliminada");
         }
         
-        reservaService.cancelarTurnoFijo(codigo);
+        reservaService.cancelarTurnoFijo(codigo, principal.getName());
         return ResponseEntity.ok("Turno fijo completo eliminado correctamente");
     }
 
