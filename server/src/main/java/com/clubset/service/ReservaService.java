@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.clubset.dto.ReservaDTO;
 import com.clubset.entity.Cancha;
@@ -52,15 +54,23 @@ public class ReservaService {
     @Value("${club.precio.base:2000.00}")
     private BigDecimal precioBase;
 
-    public List<ReservaDTO> obtenerTodas() {
-        return reservaRepository.findAll().stream()
-                .map(reservaMapper::toDTO)
-                .toList();
+    public Page<ReservaDTO> obtenerTodas(Pageable pageable) {
+        return reservaRepository.findAll(pageable)
+                .map(reservaMapper::toDTO);
     }
 
     public List<ReservaDTO> obtenerPorFecha(LocalDate fecha) {
         LocalDateTime inicioDia = fecha.atStartOfDay();
         LocalDateTime finDia = fecha.atTime(LocalTime.MAX);
+
+        return reservaRepository.findByFechaHoraBetween(inicioDia, finDia).stream()
+                .map(reservaMapper::toDTO)
+                .toList();
+    }
+
+    public List<ReservaDTO> obtenerPorRango(LocalDate fechaInicio, LocalDate fechaFin) {
+        LocalDateTime inicioDia = fechaInicio.atStartOfDay();
+        LocalDateTime finDia = fechaFin.atTime(LocalTime.MAX);
 
         return reservaRepository.findByFechaHoraBetween(inicioDia, finDia).stream()
                 .map(reservaMapper::toDTO)

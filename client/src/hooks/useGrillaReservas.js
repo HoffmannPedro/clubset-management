@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getReservas, cancelarReserva, cancelarGrupoReserva, registrarPago } from '../services/reservaService';
+import { getReservasByFecha, cancelarReserva, cancelarGrupoReserva, registrarPago } from '../services/reservaService';
 import { getCanchas } from '../services/canchaService';
 import { mostrarAlerta, confirmarEliminacionGrupal, mostrarDetallesReserva, mostrarModalCobro, confirmarAccion } from '../utils/alertas';
 
@@ -20,7 +20,7 @@ export const useGrillaReservas = (refreshKey) => {
             // Usamos Promise.all para cargar todo en paralelo (más rápido)
             const [dataCanchas, dataReservas] = await Promise.all([
                 getCanchas(),
-                getReservas()
+                getReservasByFecha(fechaSeleccionada)
             ]);
             setCanchas(dataCanchas);
             setReservas(dataReservas);

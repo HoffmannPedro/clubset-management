@@ -12,6 +12,12 @@ export const getReservasByFecha = async (fecha) => {
     return response.data;
 };
 
+// GET: Traer reservas por rango de fechas (Semana/Mes)
+export const getReservasByRango = async (inicio, fin) => {
+    const response = await api.get(`/reservas/rango?inicio=${inicio}&fin=${fin}`);
+    return response.data;
+};
+
 // POST: Crear una nueva reserva
 export const crearReserva = async (reservaNueva) => {
     const response = await api.post('/reservas', reservaNueva);

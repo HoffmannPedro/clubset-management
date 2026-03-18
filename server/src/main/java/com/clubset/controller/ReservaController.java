@@ -12,6 +12,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.security.Principal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -21,13 +25,23 @@ public class ReservaController {
     private final ReservaService reservaService;
 
     @GetMapping
-    public ResponseEntity<List<ReservaDTO>> listar() {
-        return ResponseEntity.ok(reservaService.obtenerTodas());
+    public ResponseEntity<Page<ReservaDTO>> listar(
+            @PageableDefault(size = 20, sort = "fechaHora", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(reservaService.obtenerTodas(pageable));
     }
 
     @GetMapping("/fecha/{fecha}")
     public ResponseEntity<List<ReservaDTO>> listarPorFecha(@PathVariable String fecha) {
         return ResponseEntity.ok(reservaService.obtenerPorFecha(LocalDate.parse(fecha)));
+    }
+
+    @GetMapping("/rango")
+    public ResponseEntity<List<ReservaDTO>> listarPorRango(
+            @RequestParam String inicio, 
+            @RequestParam String fin) {
+        LocalDate fechaInicio = LocalDate.parse(inicio);
+        LocalDate fechaFin = LocalDate.parse(fin);
+        return ResponseEntity.ok(reservaService.obtenerPorRango(fechaInicio, fechaFin));
     }
 
     @PostMapping
