@@ -1,8 +1,8 @@
 package com.clubset.controller;
 
-import com.clubset.dto.AuthResponse;
-import com.clubset.dto.LoginRequest;
-import com.clubset.dto.RegisterRequest;
+import com.clubset.dto.response.AuthResponse;
+import com.clubset.dto.request.LoginRequest;
+import com.clubset.dto.request.RegisterRequest;
 import com.clubset.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,5 +27,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(service.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody com.clubset.dto.request.TokenRefreshRequest request) {
+        return ResponseEntity.ok(service.refreshToken(request));
     }
 }

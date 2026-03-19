@@ -1,10 +1,11 @@
 package com.clubset.service;
 
 import com.clubset.config.JwtService;
-import com.clubset.dto.AuthResponse;
-import com.clubset.dto.LoginRequest;
-import com.clubset.dto.RegisterRequest;
+import com.clubset.dto.response.AuthResponse;
+import com.clubset.dto.request.LoginRequest;
+import com.clubset.dto.request.RegisterRequest;
 import com.clubset.entity.Usuario;
+import com.clubset.entity.RefreshToken;
 import com.clubset.enums.Categoria;
 import com.clubset.enums.Genero;
 import com.clubset.enums.Mano;
@@ -24,6 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthResponse register(RegisterRequest request) {
         // Valores por defecto si vienen nulos
@@ -48,8 +50,10 @@ public class AuthService {
         repository.save(user);
         
         var jwtToken = jwtService.generateToken(user);
+        var refreshToken = refreshTokenService.createRefreshToken(user.getId());
         return AuthResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken.getToken())
                 .build();
     }
 
@@ -67,8 +71,26 @@ public class AuthService {
                 .orElseThrow();
         
         var jwtToken = jwtService.generateToken(user);
+        var refreshToken = refreshTokenService.createRefreshToken(user.getId());
         return AuthResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken.getToken())
                 .build();
+    }
+
+    public AuthResponse refreshToken(com.clubset.dto.request.TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+        
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUsuario)
+                .map(usuario -> {
+                    String token = jwtService.generateToken(usuario);
+                    return AuthResponse.builder()
+                            .token(token)
+                            .refreshToken(requestRefreshToken) // devolvemos el mismo RT válido, o podríamos rotarlo
+                            .build();
+                })
+                .orElseThrow(() -> new RuntimeException("El Refresh Token no existe o es inválido."));
     }
 }

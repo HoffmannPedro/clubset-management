@@ -96,4 +96,17 @@ public class PagoService {
 
         pagoRepository.save(gasto);
     }
+
+    @Transactional
+    public Pago asentarPago(Reserva reserva, BigDecimal monto, MetodoPago metodo, String observacion) {
+        Pago pago = new Pago();
+        pago.setMonto(monto);
+        pago.setMetodoPago(metodo);
+        pago.setFechaPago(LocalDateTime.now());
+        pago.setObservacion(observacion);
+        pago.setTipoMovimiento(TipoMovimiento.INGRESO);
+        pago.setReserva(reserva);
+
+        return pagoRepository.save(pago);
+    }
 }

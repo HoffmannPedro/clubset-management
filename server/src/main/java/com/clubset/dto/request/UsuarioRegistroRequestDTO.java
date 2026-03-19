@@ -1,4 +1,4 @@
-package com.clubset.dto;
+package com.clubset.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -1,4 +1,4 @@
-package com.clubset.dto;
+package com.clubset.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

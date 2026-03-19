@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.security.Principal;
+import com.clubset.repository.UsuarioRepository;
+import com.clubset.entity.Usuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,6 +25,7 @@ import org.springframework.data.web.PageableDefault;
 public class ReservaController {
     
     private final ReservaService reservaService;
+    private final UsuarioRepository usuarioRepository;
 
     @GetMapping
     public ResponseEntity<Page<ReservaDTO>> listar(
@@ -46,26 +49,26 @@ public class ReservaController {
 
     @PostMapping
     public ResponseEntity<List<ReservaDTO>> crear(@RequestBody ReservaDTO reservaDTO, Principal principal) {
-        // Cero lógica, cero manejo de errores. Solo delegar.
-        return ResponseEntity.ok(reservaService.guardarReserva(reservaDTO, principal.getName()));
+        return ResponseEntity.ok(reservaService.guardarReserva(reservaDTO, getUsuarioAutenticado(principal)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> cancelar(@PathVariable Long id, Principal principal) {
-        reservaService.cancelarReserva(id, principal.getName());
+        reservaService.cancelarReserva(id, getUsuarioAutenticado(principal));
         return ResponseEntity.ok("Reserva cancelada correctamente");
     }
     
     @DeleteMapping("/{id}/completo")
     public ResponseEntity<String> cancelarGrupo(@PathVariable Long id, Principal principal) {
         String codigo = reservaService.obtenerCodigoPorReservaId(id);
+        Usuario usuario = getUsuarioAutenticado(principal);
         
         if (codigo == null) {
-            reservaService.cancelarReserva(id, principal.getName());
+            reservaService.cancelarReserva(id, usuario);
             return ResponseEntity.ok("Reserva única eliminada");
         }
         
-        reservaService.cancelarTurnoFijo(codigo, principal.getName());
+        reservaService.cancelarTurnoFijo(codigo, usuario);
         return ResponseEntity.ok("Turno fijo completo eliminado correctamente");
     }
 
@@ -82,4 +85,9 @@ public class ReservaController {
     }
 
     public record PagoRequest(BigDecimal monto, MetodoPago metodoPago, String observacion) {}
+
+    private Usuario getUsuarioAutenticado(Principal principal) {
+        return usuarioRepository.findByEmail(principal.getName())
+            .orElseThrow(() -> new SecurityException("Usuario no encontrado en la sesión."));
+    }
 }

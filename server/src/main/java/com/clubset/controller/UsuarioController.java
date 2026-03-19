@@ -10,8 +10,8 @@ import com.clubset.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import jakarta.validation.Valid;
-import com.clubset.dto.UsuarioRegistroRequestDTO;
-import com.clubset.dto.UsuarioActualizacionRequestDTO;
+import com.clubset.dto.request.UsuarioRegistroRequestDTO;
+import com.clubset.dto.request.UsuarioActualizacionRequestDTO;
 
 @RestController
 @RequestMapping("/api/usuarios")

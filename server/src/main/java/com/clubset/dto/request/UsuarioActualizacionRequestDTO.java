@@ -1,4 +1,4 @@
-package com.clubset.dto;
+package com.clubset.dto.request;
 
 import com.clubset.enums.Mano;
 import lombok.Data;

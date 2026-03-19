@@ -25,6 +25,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
         List<Reserva> findByUsuarioIdAndPagadoFalse(Long usuarioId);
         
         List<Reserva> findByUsuarioId(Long usuarioId);
+        
+        org.springframework.data.domain.Page<Reserva> findByUsuarioId(Long usuarioId, org.springframework.data.domain.Pageable pageable);
 
         List<Reserva> findTop5ByUsuarioIdOrderByFechaHoraDesc(Long usuarioId);
 

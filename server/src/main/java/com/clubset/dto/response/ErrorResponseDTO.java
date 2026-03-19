@@ -1,4 +1,4 @@
-package com.clubset.dto;
+package com.clubset.dto.response;
 
 import java.time.LocalDateTime;
 

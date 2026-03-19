@@ -19,7 +19,6 @@ import com.clubset.enums.TipoMovimiento;
 import com.clubset.enums.RolUsuario;
 import com.clubset.mapper.ReservaMapper;
 import com.clubset.repository.CanchaRepository;
-import com.clubset.repository.PagoRepository;
 import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
 import com.clubset.util.CalculadoraReserva;
@@ -40,7 +39,7 @@ public class ReservaService {
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
     private final CanchaRepository canchaRepository;
-    private final PagoRepository pagoRepository;
+    private final PagoService pagoService;
     private final ReservaMapper reservaMapper;
 
     // Inyectamos valores desde application.properties. Si no existen, usan el valor
@@ -78,7 +77,7 @@ public class ReservaService {
     }
 
     @Transactional
-    public List<ReservaDTO> guardarReserva(ReservaDTO dto, String emailAutenticado) {
+    public List<ReservaDTO> guardarReserva(ReservaDTO dto, Usuario usuarioAutenticado) {
         log.info("Iniciando creación de reserva...");
 
         validarReglasDeHorario(dto.getFechaHora());
@@ -90,7 +89,7 @@ public class ReservaService {
             throw new IllegalStateException("Esta cancha está en mantenimiento.");
         }
 
-        Usuario usuario = resolveUsuario(dto, emailAutenticado);
+        Usuario usuario = resolveUsuarioTarget(dto, usuarioAutenticado);
 
         int semanas = (dto.getRepetirSemanas() == null || dto.getRepetirSemanas() < 1) ? 1 : dto.getRepetirSemanas();
         String codigoGrupo = (semanas > 1) ? UUID.randomUUID().toString() : null;
@@ -134,39 +133,14 @@ public class ReservaService {
                 reserva.setTelefonoContacto(dto.getTelefonoContacto());
             }
 
-            reservasCreadas.add(reservaRepository.save(reserva));
-        }
-
-        BigDecimal saldoDisponible = dto.getMontoAbonado();
-
-        if (saldoDisponible != null && saldoDisponible.compareTo(BigDecimal.ZERO) > 0) {
-            for (Reserva res : reservasCreadas) {
-                if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0)
-                    break;
-
-                BigDecimal precioCancha = res.getPrecioPactado();
-                BigDecimal montoAImputar = (saldoDisponible.compareTo(precioCancha) >= 0) ? precioCancha
-                        : saldoDisponible;
-
-                Pago pago = new Pago();
-                pago.setMonto(montoAImputar);
-                pago.setMetodoPago(MetodoPago.valueOf(dto.getMetodoPago()));
-                pago.setFechaPago(LocalDateTime.now());
-                pago.setObservacion(semanas > 1 ? "Pago adelantado (Turno Fijo)" : "Pago adelantado");
-                pago.setTipoMovimiento(TipoMovimiento.INGRESO);
-                pago.setReserva(res);
-
-                pagoRepository.save(pago);
-
-                res.getPagos().add(pago);
-                if (CalculadoraReserva.calcularSaldoPendiente(res).compareTo(BigDecimal.ZERO) <= 0) {
-                    res.setPagado(true);
-                }
-                reservaRepository.save(res);
-
-                saldoDisponible = saldoDisponible.subtract(montoAImputar);
+            try {
+                reservasCreadas.add(reservaRepository.saveAndFlush(reserva));
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                throw new IllegalStateException("Conflicto: La cancha ya fue reservada en otro proceso simultáneo para el día " + fechaFinal.toString());
             }
         }
+
+        imputarSaldoAdelantado(reservasCreadas, dto.getMontoAbonado(), dto.getMetodoPago(), semanas);
 
         return reservasCreadas.stream().map(reservaMapper::toDTO).toList();
     }
@@ -184,13 +158,8 @@ public class ReservaService {
         }
     }
 
-    private Usuario resolveUsuario(ReservaDTO dto, String emailAutenticado) {
-        // 1. Buscamos al usuario que está ejecutando la acción puramente por su email
-        Usuario usuarioEjecutor = usuarioRepository.findByEmail(emailAutenticado)
-                .orElseThrow(() -> new SecurityException(
-                        "Error de seguridad: Usuario autenticado no encontrado en el sistema."));
-
-        // 2. Verificamos si es un administrador según el dominio
+    private Usuario resolveUsuarioTarget(ReservaDTO dto, Usuario usuarioEjecutor) {
+        // Verificamos si es un administrador
         boolean isAdmin = usuarioEjecutor.getRol() == RolUsuario.ADMIN; // Expandible a EMPLEADO si lo agregas luego
 
         if (isAdmin) {
@@ -228,15 +197,7 @@ public class ReservaService {
                     "Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
         }
 
-        Pago pago = new Pago();
-        pago.setMonto(monto);
-        pago.setMetodoPago(metodo);
-        pago.setFechaPago(LocalDateTime.now());
-        pago.setObservacion(observacion);
-        pago.setTipoMovimiento(TipoMovimiento.INGRESO);
-        pago.setReserva(reserva);
-
-        pagoRepository.save(pago);
+        Pago pago = pagoService.asentarPago(reserva, monto, metodo, observacion);
         reserva.getPagos().add(pago);
 
         if (CalculadoraReserva.calcularSaldoPendiente(reserva).compareTo(BigDecimal.ZERO) <= 0) {
@@ -249,11 +210,11 @@ public class ReservaService {
     }
 
     @Transactional
-    public void cancelarReserva(Long id, String emailAutenticado) {
+    public void cancelarReserva(Long id, Usuario usuarioAutenticado) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada."));
 
-        validarPermisoCancelacion(reserva, emailAutenticado);
+        validarPermisoCancelacion(reserva, usuarioAutenticado);
 
         if (!reserva.getPagos().isEmpty()) {
             throw new IllegalStateException(
@@ -264,11 +225,11 @@ public class ReservaService {
     }
 
     @Transactional
-    public void cancelarTurnoFijo(String codigo, String emailAutenticado) {
+    public void cancelarTurnoFijo(String codigo, Usuario usuarioAutenticado) {
         List<Reserva> reservasDelGrupo = reservaRepository.findByCodigoTurnoFijo(codigo);
 
         if (!reservasDelGrupo.isEmpty()) {
-            validarPermisoCancelacion(reservasDelGrupo.get(0), emailAutenticado);
+            validarPermisoCancelacion(reservasDelGrupo.get(0), usuarioAutenticado);
         }
 
         for (Reserva res : reservasDelGrupo) {
@@ -281,13 +242,10 @@ public class ReservaService {
         reservaRepository.deleteByCodigoTurnoFijo(codigo);
     }
 
-    private void validarPermisoCancelacion(Reserva reserva, String emailAutenticado) {
-        Usuario usuarioAutenticado = usuarioRepository.findByEmail(emailAutenticado)
-                .orElseThrow(() -> new SecurityException("Error de seguridad: Usuario no encontrado."));
-
+    private void validarPermisoCancelacion(Reserva reserva, Usuario usuarioAutenticado) {
         boolean isAdmin = usuarioAutenticado.getRol() == RolUsuario.ADMIN;
         boolean isPropietario = reserva.getUsuario() != null
-                && reserva.getUsuario().getEmail().equals(emailAutenticado);
+                && reserva.getUsuario().getId().equals(usuarioAutenticado.getId());
 
         if (!isAdmin && !isPropietario) {
             throw new SecurityException("Acceso denegado: No tienes permiso para cancelar esta reserva.");
@@ -305,4 +263,26 @@ public class ReservaService {
         return reservaRepository.findById(id).map(Reserva::getCodigoTurnoFijo).orElse(null);
     }
 
+    private void imputarSaldoAdelantado(List<Reserva> reservas, BigDecimal saldoDisponible, String metodoPagoStr, int semanas) {
+        if (saldoDisponible == null || saldoDisponible.compareTo(BigDecimal.ZERO) <= 0) return;
+        MetodoPago metodo = MetodoPago.valueOf(metodoPagoStr);
+
+        for (Reserva res : reservas) {
+            if (saldoDisponible.compareTo(BigDecimal.ZERO) <= 0) break;
+
+            BigDecimal precioCancha = res.getPrecioPactado();
+            BigDecimal montoAImputar = (saldoDisponible.compareTo(precioCancha) >= 0) ? precioCancha : saldoDisponible;
+
+            String obs = semanas > 1 ? "Pago adelantado (Turno Fijo)" : "Pago adelantado";
+            Pago pago = pagoService.asentarPago(res, montoAImputar, metodo, obs);
+            res.getPagos().add(pago);
+
+            if (CalculadoraReserva.calcularSaldoPendiente(res).compareTo(BigDecimal.ZERO) <= 0) {
+                res.setPagado(true);
+            }
+            reservaRepository.save(res);
+
+            saldoDisponible = saldoDisponible.subtract(montoAImputar);
+        }
+    }
 }

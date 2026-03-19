@@ -50,10 +50,23 @@ public class FinanzasService {
     }
 
     public org.springframework.data.domain.Page<MovimientoPerfilDTO> obtenerHistorialFinancieroPaginado(Long usuarioId, org.springframework.data.domain.Pageable pageable) {
-        List<MovimientoPerfilDTO> todo = obtenerHistorialFinanciero(usuarioId);
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), todo.size());
-        List<MovimientoPerfilDTO> subList = start < todo.size() ? todo.subList(start, end) : java.util.Collections.emptyList();
-        return new org.springframework.data.domain.PageImpl<>(subList, pageable, todo.size());
+        return reservaRepository.findByUsuarioId(usuarioId, pageable)
+                .map(r -> {
+                    java.math.BigDecimal saldo = com.clubset.util.CalculadoraReserva.calcularSaldoPendiente(r);
+                    String estadoCondicional;
+                    if (saldo.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                        estadoCondicional = "PAGADO";
+                    } else if (saldo.compareTo(r.getPrecioPactado()) < 0) {
+                        estadoCondicional = "PAGO PARCIAL";
+                    } else {
+                        estadoCondicional = "PENDIENTE";
+                    }
+                    return new MovimientoPerfilDTO(
+                            "RESERVA",
+                            "Alquiler Cancha: " + r.getCancha().getNombre(),
+                            r.getFechaHora(),
+                            r.getPrecioPactado(),
+                            estadoCondicional);
+                });
     }
 }

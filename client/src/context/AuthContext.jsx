@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
                 } catch (error) {
                     console.error("Token inválido o expirado", error);
                     localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
                     setUser(null);
                 }
             }
@@ -31,8 +32,9 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const response = await api.post('/auth/login', { email, password });
-            const { token } = response.data;
+            const { token, refreshToken } = response.data;
             localStorage.setItem('token', token);
+            localStorage.setItem('refreshToken', refreshToken);
             
             // Inmediatamente después de obtener token, pedimos el perfil completo
             const profileResponse = await api.get('/usuarios/me');
@@ -50,8 +52,9 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             const response = await api.post('/auth/register', userData);
-            const { token } = response.data;
+            const { token, refreshToken } = response.data;
             localStorage.setItem('token', token);
+            localStorage.setItem('refreshToken', refreshToken);
             
             // Pedimos perfil (aunque sabemos que al registrarse es SOCIO, es buena práctica)
             const profileResponse = await api.get('/usuarios/me');
@@ -65,6 +68,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         setUser(null);
     };
 

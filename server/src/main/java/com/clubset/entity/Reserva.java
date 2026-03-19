@@ -8,7 +8,9 @@ import java.util.List;       // Importante
 import java.util.ArrayList;  // Importante
 
 @Entity
-@Table(name = "reserva", indexes = {@Index(name = "idx_reserva_fecha_hora", columnList = "fechaHora")})
+@Table(name = "reserva", 
+       indexes = {@Index(name = "idx_reserva_fecha_hora", columnList = "fechaHora")},
+       uniqueConstraints = {@UniqueConstraint(name = "uk_cancha_fecha", columnNames = {"cancha_id", "fecha_hora"})})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

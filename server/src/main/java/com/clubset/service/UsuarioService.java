@@ -9,8 +9,8 @@ import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
 import com.clubset.mapper.UsuarioMapper;
 import com.clubset.dto.MovimientoPerfilDTO;
-import com.clubset.dto.UsuarioRegistroRequestDTO;
-import com.clubset.dto.UsuarioActualizacionRequestDTO;
+import com.clubset.dto.request.UsuarioRegistroRequestDTO;
+import com.clubset.dto.request.UsuarioActualizacionRequestDTO;
 import com.clubset.enums.RolUsuario;
 
 import jakarta.transaction.Transactional;
