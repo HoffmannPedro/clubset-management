@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.EntityGraph;
 import com.clubset.entity.Reserva;
 
 import java.math.BigDecimal;
@@ -12,8 +13,13 @@ import java.util.List; // <--- Importante
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
+        @Override
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
+        org.springframework.data.domain.Page<Reserva> findAll(org.springframework.data.domain.Pageable pageable);
+
         boolean existsByCanchaIdAndFechaHora(Long canchaId, LocalDateTime fechaHora);
 
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
         List<Reserva> findByFechaHoraBetween(LocalDateTime inicio, LocalDateTime fin);
 
         List<Reserva> findByUsuarioIdAndPagadoFalse(Long usuarioId);

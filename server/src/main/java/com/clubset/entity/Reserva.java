@@ -8,7 +8,7 @@ import java.util.List;       // Importante
 import java.util.ArrayList;  // Importante
 
 @Entity
-@Table(name = "reserva")
+@Table(name = "reserva", indexes = {@Index(name = "idx_reserva_fecha_hora", columnList = "fechaHora")})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +31,7 @@ public class Reserva {
 
     // NUEVO: Relación inversa para poder acceder a los pagos desde la reserva
     @OneToMany(mappedBy = "reserva", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.BatchSize(size = 50)
     private List<Pago> pagos = new ArrayList<>();
 
     private String codigoTurnoFijo;
@@ -42,24 +43,15 @@ public class Reserva {
     private String telefonoContacto;
 
     // MODIFICADO: Puede ser NULL (nullable = true)
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = true) 
     @ToString.Exclude
     private Usuario usuario;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cancha_id", nullable = false)
     @ToString.Exclude
     private Cancha cancha;
     
-    // Helper para saber cuánto falta pagar (Lógica de negocio en la entidad)
-    public BigDecimal getSaldoPendiente() {
-        if (precioPactado == null) return BigDecimal.ZERO;
-        
-        BigDecimal totalPagado = pagos.stream()
-            .map(Pago::getMonto)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-        return precioPactado.subtract(totalPagado);
-    }
+
 }

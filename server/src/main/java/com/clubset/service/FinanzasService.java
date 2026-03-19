@@ -25,33 +25,35 @@ public class FinanzasService {
         List<Reserva> reservas = reservaRepository.findByUsuarioId(usuarioId);
 
         for (Reserva r : reservas) {
-            historial.add(new MovimientoPerfilDTO(
-                    "CARGO",
-                    "Reserva: " + r.getCancha().getNombre(),
-                    r.getFechaHora(),
-                    r.getPrecioPactado(), // El monto total que costaba
-                    r.getPagado() ? "PAGADO" : "PENDIENTE"));
-
-            // 2. Por cada reserva, buscamos sus pagos (Abonos)
-            // Ya que el Pago tiene el reserva_id, los iteramos
-            for (Pago p : r.getPagos()) {
-                // Validación estricta para ignorar nulls, vacíos ("") o espacios (" ")
-                String textoObservacion = (p.getObservacion() != null && !p.getObservacion().isBlank())
-                        ? " (" + p.getObservacion().trim() + ")"
-                        : "";
-
-                historial.add(new MovimientoPerfilDTO(
-                        "ABONO",
-                        "Pago: " + p.getMetodoPago().name() + textoObservacion,
-                        p.getFechaPago(),
-                        p.getMonto(),
-                        "COMPLETADO"));
+            java.math.BigDecimal saldo = com.clubset.util.CalculadoraReserva.calcularSaldoPendiente(r);
+            String estadoCondicional;
+            if (saldo.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                estadoCondicional = "PAGADO";
+            } else if (saldo.compareTo(r.getPrecioPactado()) < 0) {
+                estadoCondicional = "PAGO PARCIAL";
+            } else {
+                estadoCondicional = "PENDIENTE";
             }
+
+            historial.add(new MovimientoPerfilDTO(
+                    "RESERVA",
+                    "Alquiler Cancha: " + r.getCancha().getNombre(),
+                    r.getFechaHora(),
+                    r.getPrecioPactado(), // Valor histórico inmutable del consumo
+                    estadoCondicional));
         }
 
         // 3. Ordenamos todo cronológicamente (del más nuevo al más viejo)
         return historial.stream()
                 .sorted(Comparator.comparing(MovimientoPerfilDTO::getFecha).reversed())
                 .collect(Collectors.toList());
+    }
+
+    public org.springframework.data.domain.Page<MovimientoPerfilDTO> obtenerHistorialFinancieroPaginado(Long usuarioId, org.springframework.data.domain.Pageable pageable) {
+        List<MovimientoPerfilDTO> todo = obtenerHistorialFinanciero(usuarioId);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), todo.size());
+        List<MovimientoPerfilDTO> subList = start < todo.size() ? todo.subList(start, end) : java.util.Collections.emptyList();
+        return new org.springframework.data.domain.PageImpl<>(subList, pageable, todo.size());
     }
 }

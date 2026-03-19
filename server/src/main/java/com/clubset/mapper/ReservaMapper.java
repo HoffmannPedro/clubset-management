@@ -15,6 +15,7 @@ public interface ReservaMapper {
     @Mapping(source = "precioPactado", target = "precio")
     // Resolvemos la lógica de "Socio vs Invitado" directamente en el mapeo
     @Mapping(target = "nombreUsuario", expression = "java(reserva.getUsuario() != null ? reserva.getUsuario().getNombre() + \" \" + reserva.getUsuario().getApellido() : reserva.getNombreContacto() + \" (Inv)\")")
+    @Mapping(target = "saldoPendiente", expression = "java(com.clubset.util.CalculadoraReserva.calcularSaldoPendiente(reserva))")
     ReservaDTO toDTO(Reserva reserva);
 
 }

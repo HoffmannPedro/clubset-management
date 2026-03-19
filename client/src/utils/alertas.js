@@ -155,7 +155,7 @@ export const mostrarDetallesReserva = async (reserva) => {
 // --- MODAL DE COBRO (CON VALIDACIÓN) ---
 export const mostrarModalCobro = async (reserva) => {
     const saldoPendiente = reserva.saldoPendiente !== undefined ? reserva.saldoPendiente : 0;
-    
+
     const htmlContent = `
         <div class="flex flex-col gap-4 text-left">
             <div class="bg-gray-800 p-3 rounded-lg border border-gray-600">
@@ -178,8 +178,8 @@ export const mostrarModalCobro = async (reserva) => {
                     <option value="EFECTIVO">💵 Efectivo</option>
                     <option value="MERCADO_PAGO">📱 Mercado Pago</option>
                     <option value="TRANSFERENCIA">🏦 Transferencia</option>
-                    <option value="DEBITO">💳 Débito</option>
-                    <option value="CREDITO">💳 Crédito</option>
+                    <option value="TARJETA_DEBITO">💳 Débito</option>
+                    <option value="TARJETA_CREDITO">💳 Crédito</option>
                 </select>
             </div>
 

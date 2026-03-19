@@ -5,6 +5,12 @@ import { formatearConceptoMovimiento } from '../../utils/formatters';
 const PerfilUsuario = ({ usuarioId = null }) => {
     const [perfil, setPerfil] = useState(null);
     const [loading, setLoading] = useState(true);
+    
+    // Estados para el Historial Paginado
+    const [movimientos, setMovimientos] = useState([]);
+    const [pagina, setPagina] = useState(0);
+    const [hasMoreMovimientos, setHasMoreMovimientos] = useState(false);
+    const [loadingMovimientos, setLoadingMovimientos] = useState(false);
 
     // Estados para el Modal de Edición
     const [showEditModal, setShowEditModal] = useState(false);
@@ -25,6 +31,12 @@ const PerfilUsuario = ({ usuarioId = null }) => {
             const endpoint = usuarioId ? `/usuarios/${usuarioId}` : '/usuarios/me';
             const res = await api.get(endpoint);
             setPerfil(res.data);
+
+            // Gatillamos la carga de la página 0 del historial asíncrono
+            setPagina(0);
+            setMovimientos([]);
+            cargarMovimientos(usuarioId ? `/usuarios/${usuarioId}/historial` : '/usuarios/me/historial', 0);
+
             // Pre-cargamos los datos en el form por si quiere editar
             setEditData({
                 nombre: res.data.nombre || '',
@@ -36,6 +48,24 @@ const PerfilUsuario = ({ usuarioId = null }) => {
             console.error("Error cargando perfil", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const cargarMovimientos = async (url, pageIndex) => {
+        setLoadingMovimientos(true);
+        try {
+            const res = await api.get(`${url}?page=${pageIndex}&size=5`);
+            if (pageIndex === 0) {
+                setMovimientos(res.data.content);
+            } else {
+                setMovimientos(prev => [...prev, ...res.data.content]);
+            }
+            setHasMoreMovimientos(!res.data.last);
+            setPagina(pageIndex);
+        } catch (error) {
+            console.error("Error cargando historial", error);
+        } finally {
+            setLoadingMovimientos(false);
         }
     };
 
@@ -188,8 +218,8 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                            {perfil.ultimosMovimientos && perfil.ultimosMovimientos.length > 0 ? (
-                                perfil.ultimosMovimientos.map((movimiento, index) => (
+                            {movimientos && movimientos.length > 0 ? (
+                                movimientos.map((movimiento, index) => (
                                     <tr key={index} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-bold">
                                             {new Date(movimiento.fecha).toLocaleDateString()}
@@ -206,8 +236,8 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-bold">
-                                            <span className={movimiento.tipo === 'CARGO' ? 'text-red-400' : 'text-green-400'}>
-                                                {movimiento.tipo === 'CARGO' ? '-' : '+'}${movimiento.monto}
+                                            <span className={movimiento.tipo === 'CARGO' || movimiento.tipo === 'RESERVA' ? (isMiPerfil ? 'text-red-400' : 'text-green-400') : 'text-green-400'}>
+                                                {movimiento.tipo === 'CARGO' || movimiento.tipo === 'RESERVA' ? (isMiPerfil ? '-' : '+') : '+'}${movimiento.monto}
                                             </span>
                                         </td>
                                     </tr>
@@ -225,8 +255,8 @@ const PerfilUsuario = ({ usuarioId = null }) => {
 
                 {/* --- VERSIÓN MÓVIL (Tarjetas) --- */}
                 <div className="grid grid-cols-1 gap-3 p-4 md:hidden bg-background/30">
-                    {perfil.ultimosMovimientos && perfil.ultimosMovimientos.length > 0 ? (
-                        perfil.ultimosMovimientos.map((movimiento, index) => (
+                    {movimientos && movimientos.length > 0 ? (
+                        movimientos.map((movimiento, index) => (
                             <div key={index} className="bg-surface border border-border rounded-xl p-4 shadow-sm flex flex-col gap-3">
                                 <div className="flex justify-between items-start border-b border-border/50 pb-2">
                                     <div className="flex flex-col">
@@ -246,8 +276,8 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                                     <span className="font-bold text-sm text-text uppercase max-w-[60%] leading-tight">{formatearConceptoMovimiento(movimiento.concepto)}</span>
                                     <div className="flex flex-col items-end shrink-0">
                                         <span className="text-[9px] font-bold text-textMuted uppercase">{movimiento.tipo}</span>
-                                        <span className={`font-black text-lg font-mono tracking-tighter ${movimiento.tipo === 'CARGO' ? 'text-red-400' : 'text-green-400'}`}>
-                                            {movimiento.tipo === 'CARGO' ? '-' : '+'}${movimiento.monto}
+                                        <span className={`font-black text-lg font-mono tracking-tighter ${movimiento.tipo === 'CARGO' || movimiento.tipo === 'RESERVA' ? (isMiPerfil ? 'text-red-400' : 'text-green-400') : 'text-green-400'}`}>
+                                            {movimiento.tipo === 'CARGO' || movimiento.tipo === 'RESERVA' ? (isMiPerfil ? '-' : '+') : '+'}${movimiento.monto}
                                         </span>
                                     </div>
                                 </div>
@@ -259,6 +289,17 @@ const PerfilUsuario = ({ usuarioId = null }) => {
                         </div>
                     )}
                 </div>
+
+                {hasMoreMovimientos && movimientos.length > 0 && (
+                    <div className="p-4 border-t border-border flex justify-center bg-black/10">
+                        <button 
+                            onClick={() => cargarMovimientos(usuarioId ? `/usuarios/${usuarioId}/historial` : '/usuarios/me/historial', pagina + 1)}
+                            disabled={loadingMovimientos}
+                            className="px-6 py-2 bg-surface border border-border hover:border-primary text-xs font-bold uppercase tracking-widest rounded-lg text-textMuted hover:text-white transition-all">
+                            {loadingMovimientos ? 'Cargando...' : 'Ver Más Movimientos'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* --- MODAL DE EDICIÓN DE PERFIL --- */}

@@ -62,10 +62,10 @@ const GestionReservasView = ({ refreshKey, onReservaExitosa, preseleccion, onEmp
 
                 {subTabActiva === 'LISTA' && (
                     <VistaListaReservas
-                        reservas={grillaData.reservas}
                         fechaSeleccionada={grillaData.fechaSeleccionada}
                         setFechaSeleccionada={grillaData.setFechaSeleccionada}
                         handleReservaClick={grillaData.handleReservaClick}
+                        refreshKey={refreshKey}  // Pasamos esto para que la lista también reaccione a nuevas reservas
                     />
                 )}
 

@@ -19,6 +19,7 @@ import com.clubset.dto.UsuarioActualizacionRequestDTO;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final com.clubset.service.FinanzasService finanzasService;
 
     @GetMapping
     public List<UsuarioDTO> obtenerTodos() {
@@ -70,5 +71,20 @@ public class UsuarioController {
         
         // 2. Mandamos a actualizar de forma segura
         return usuarioService.actualizarPerfilPropio(email, actualizacion);
+    }
+
+    @GetMapping("/{id}/historial")
+    public org.springframework.data.domain.Page<com.clubset.dto.MovimientoPerfilDTO> obtenerHistorial(
+            @PathVariable Long id, 
+            @org.springframework.data.web.PageableDefault(size = 5) org.springframework.data.domain.Pageable pageable) {
+        return finanzasService.obtenerHistorialFinancieroPaginado(id, pageable);
+    }
+
+    @GetMapping("/me/historial")
+    public org.springframework.data.domain.Page<com.clubset.dto.MovimientoPerfilDTO> obtenerMiHistorial(
+            @org.springframework.data.web.PageableDefault(size = 5) org.springframework.data.domain.Pageable pageable) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioDTO user = usuarioService.buscarPorEmail(email);
+        return finanzasService.obtenerHistorialFinancieroPaginado(user.getId(), pageable);
     }
 }

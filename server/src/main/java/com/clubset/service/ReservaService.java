@@ -3,7 +3,6 @@ package com.clubset.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +22,7 @@ import com.clubset.repository.CanchaRepository;
 import com.clubset.repository.PagoRepository;
 import com.clubset.repository.ReservaRepository;
 import com.clubset.repository.UsuarioRepository;
+import com.clubset.util.CalculadoraReserva;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -159,7 +159,7 @@ public class ReservaService {
                 pagoRepository.save(pago);
 
                 res.getPagos().add(pago);
-                if (res.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+                if (CalculadoraReserva.calcularSaldoPendiente(res).compareTo(BigDecimal.ZERO) <= 0) {
                     res.setPagado(true);
                 }
                 reservaRepository.save(res);
@@ -187,13 +187,15 @@ public class ReservaService {
     private Usuario resolveUsuario(ReservaDTO dto, String emailAutenticado) {
         // 1. Buscamos al usuario que está ejecutando la acción puramente por su email
         Usuario usuarioEjecutor = usuarioRepository.findByEmail(emailAutenticado)
-                .orElseThrow(() -> new SecurityException("Error de seguridad: Usuario autenticado no encontrado en el sistema."));
+                .orElseThrow(() -> new SecurityException(
+                        "Error de seguridad: Usuario autenticado no encontrado en el sistema."));
 
         // 2. Verificamos si es un administrador según el dominio
         boolean isAdmin = usuarioEjecutor.getRol() == RolUsuario.ADMIN; // Expandible a EMPLEADO si lo agregas luego
 
         if (isAdmin) {
-            // ESCENARIO B (Administrador): Tiene permiso para asignar reservas a otros o a invitados
+            // ESCENARIO B (Administrador): Tiene permiso para asignar reservas a otros o a
+            // invitados
             if (dto.getUsuarioId() != null) {
                 return usuarioRepository.findById(dto.getUsuarioId())
                         .orElseThrow(() -> new IllegalArgumentException("Error: El socio seleccionado no existe."));
@@ -209,7 +211,8 @@ public class ReservaService {
             }
         } else {
             // ESCENARIO A (Socio/Jugador): Solo puede reservar para SÍ MISMO.
-            // Ignoramos olímpicamente el usuarioId que venga en el DTO (Evita vulnerabilidad IDOR)
+            // Ignoramos olímpicamente el usuarioId que venga en el DTO (Evita
+            // vulnerabilidad IDOR)
             return usuarioEjecutor;
         }
     }
@@ -219,7 +222,7 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
 
-        BigDecimal saldoActual = reserva.getSaldoPendiente();
+        BigDecimal saldoActual = CalculadoraReserva.calcularSaldoPendiente(reserva);
         if (monto.compareTo(saldoActual) > 0) {
             throw new IllegalArgumentException(
                     "Error: El monto ingresado ($" + monto + ") supera el saldo pendiente ($" + saldoActual + ").");
@@ -236,7 +239,7 @@ public class ReservaService {
         pagoRepository.save(pago);
         reserva.getPagos().add(pago);
 
-        if (reserva.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+        if (CalculadoraReserva.calcularSaldoPendiente(reserva).compareTo(BigDecimal.ZERO) <= 0) {
             reserva.setPagado(true);
         } else {
             reserva.setPagado(false);
@@ -265,7 +268,7 @@ public class ReservaService {
         List<Reserva> reservasDelGrupo = reservaRepository.findByCodigoTurnoFijo(codigo);
 
         if (!reservasDelGrupo.isEmpty()) {
-             validarPermisoCancelacion(reservasDelGrupo.get(0), emailAutenticado);
+            validarPermisoCancelacion(reservasDelGrupo.get(0), emailAutenticado);
         }
 
         for (Reserva res : reservasDelGrupo) {
@@ -283,7 +286,8 @@ public class ReservaService {
                 .orElseThrow(() -> new SecurityException("Error de seguridad: Usuario no encontrado."));
 
         boolean isAdmin = usuarioAutenticado.getRol() == RolUsuario.ADMIN;
-        boolean isPropietario = reserva.getUsuario() != null && reserva.getUsuario().getEmail().equals(emailAutenticado);
+        boolean isPropietario = reserva.getUsuario() != null
+                && reserva.getUsuario().getEmail().equals(emailAutenticado);
 
         if (!isAdmin && !isPropietario) {
             throw new SecurityException("Acceso denegado: No tienes permiso para cancelar esta reserva.");
