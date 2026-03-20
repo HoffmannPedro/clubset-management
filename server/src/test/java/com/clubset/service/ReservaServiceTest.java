@@ -42,14 +42,17 @@ class ReservaServiceTest {
     void setUp() {
         // Arrange - Setup base models
         propietario = new Usuario();
+        propietario.setId(1L);
         propietario.setEmail("victima@mail.com");
         propietario.setRol(RolUsuario.USER);
 
         atacanteRaso = new Usuario();
+        atacanteRaso.setId(2L);
         atacanteRaso.setEmail("atacante@mail.com");
         atacanteRaso.setRol(RolUsuario.USER);
 
         administrador = new Usuario();
+        administrador.setId(3L);
         administrador.setEmail("admin@mail.com");
         administrador.setRol(RolUsuario.ADMIN);
 
@@ -64,14 +67,12 @@ class ReservaServiceTest {
     void debeLanzarSecurityException_cuandoUsuarioRasoCancelaReservaAjena() {
         // Given (Arrange)
         Long idReserva = reserva.getId();
-        String emailAtacante = atacanteRaso.getEmail();
 
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
-        when(usuarioRepository.findByEmail(emailAtacante)).thenReturn(Optional.of(atacanteRaso));
 
         // When & Then (Act & Assert)
         SecurityException exception = assertThrows(SecurityException.class, () -> {
-            reservaService.cancelarReserva(idReserva, emailAtacante);
+            reservaService.cancelarReserva(idReserva, atacanteRaso);
         });
 
         assertEquals("Acceso denegado: No tienes permiso para cancelar esta reserva.", exception.getMessage());
@@ -85,13 +86,11 @@ class ReservaServiceTest {
     void debeCancelar_cuandoUsuarioEsPropietario() {
         // Given (Arrange)
         Long idReserva = reserva.getId();
-        String emailPropietario = propietario.getEmail();
 
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
-        when(usuarioRepository.findByEmail(emailPropietario)).thenReturn(Optional.of(propietario));
 
         // When (Act)
-        reservaService.cancelarReserva(idReserva, emailPropietario);
+        reservaService.cancelarReserva(idReserva, propietario);
 
         // Then (Assert)
         verify(reservaRepository, times(1)).delete(reserva);
@@ -102,13 +101,11 @@ class ReservaServiceTest {
     void debeCancelar_cuandoUsuarioEsAdmin() {
         // Given (Arrange)
         Long idReserva = reserva.getId();
-        String emailAdmin = administrador.getEmail();
 
         when(reservaRepository.findById(idReserva)).thenReturn(Optional.of(reserva));
-        when(usuarioRepository.findByEmail(emailAdmin)).thenReturn(Optional.of(administrador));
 
         // When (Act)
-        reservaService.cancelarReserva(idReserva, emailAdmin);
+        reservaService.cancelarReserva(idReserva, administrador);
 
         // Then (Assert)
         verify(reservaRepository, times(1)).delete(reserva);

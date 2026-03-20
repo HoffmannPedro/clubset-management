@@ -22,14 +22,19 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
         @EntityGraph(attributePaths = {"cancha", "usuario"})
         List<Reserva> findByFechaHoraBetween(LocalDateTime inicio, LocalDateTime fin);
 
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
         List<Reserva> findByUsuarioIdAndPagadoFalse(Long usuarioId);
         
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
         List<Reserva> findByUsuarioId(Long usuarioId);
         
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
         org.springframework.data.domain.Page<Reserva> findByUsuarioId(Long usuarioId, org.springframework.data.domain.Pageable pageable);
 
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
         List<Reserva> findTop5ByUsuarioIdOrderByFechaHoraDesc(Long usuarioId);
 
+        @EntityGraph(attributePaths = {"cancha", "usuario"})
         List<Reserva> findByCodigoTurnoFijo(String codigoTurnoFijo);
 
         Long countByUsuarioId(Long usuarioId);

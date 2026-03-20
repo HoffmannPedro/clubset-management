@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import FormularioReserva from './FormularioReserva';
 import GrillaReservas from './GrillaReservas';
 import VistaListaReservas from './VistaListaReservas';
@@ -11,12 +11,11 @@ const GestionReservasView = ({ refreshKey, onReservaExitosa, preseleccion, onEmp
     // Extraemos los datos del hook AQUÍ arriba para poder compartirlos con Grilla y Lista
     const grillaData = useGrillaReservas(refreshKey);
 
-    // Si el usuario hace clic en un hueco de la grilla (preseleccion cambia), lo mandamos al Formulario automáticamente
-    useEffect(() => {
-        if (preseleccion) {
-            setSubTabActiva('FORMULARIO');
-        }
-    }, [preseleccion]);
+    // Interceptamos el clic en el hueco vacío ANTES de avisarle al padre
+    const handleEmptySlotClickWrapper = (canchaId, hora, fecha) => {
+        setSubTabActiva('FORMULARIO'); // Cambiamos de pestaña localmente en el momento
+        onEmptySlotClick(canchaId, hora, fecha); // Le pasamos los datos al padre
+    };
 
     // Handler extendido para cuando se crea una reserva
     const handleFormSubmitExitoso = () => {
@@ -56,7 +55,7 @@ const GestionReservasView = ({ refreshKey, onReservaExitosa, preseleccion, onEmp
                     <GrillaReservas
                         // Le pasamos los datos pre-cargados al componente Grilla
                         data={grillaData}
-                        onEmptySlotClick={onEmptySlotClick}
+                        onEmptySlotClick={handleEmptySlotClickWrapper}
                     />
                 )}
 

@@ -16,6 +16,11 @@ public interface ReservaMapper {
     // Resolvemos la lógica de "Socio vs Invitado" directamente en el mapeo
     @Mapping(target = "nombreUsuario", expression = "java(reserva.getUsuario() != null ? reserva.getUsuario().getNombre() + \" \" + reserva.getUsuario().getApellido() : reserva.getNombreContacto() + \" (Inv)\")")
     @Mapping(target = "saldoPendiente", expression = "java(com.clubset.util.CalculadoraReserva.calcularSaldoPendiente(reserva))")
+    
+    // Ignoramos campos exclusivos de entrada (Write-only) para silenciar el warning del compilador
+    @Mapping(target = "repetirSemanas", ignore = true)
+    @Mapping(target = "montoAbonado", ignore = true)
+    @Mapping(target = "metodoPago", ignore = true)
     ReservaDTO toDTO(Reserva reserva);
 
 }
