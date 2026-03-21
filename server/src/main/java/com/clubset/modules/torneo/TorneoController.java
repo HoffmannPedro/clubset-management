@@ -20,7 +20,25 @@ public class TorneoController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public TorneoDTO crear(@RequestBody Torneo torneo) {
         return torneoService.guardar(torneo);
+    }
+
+    @PostMapping("/{id}/fixture/aleatorio")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public org.springframework.http.ResponseEntity<List<PartidoTorneo>> generarFixtureAleatorio(@PathVariable Long id) {
+        List<PartidoTorneo> fixture = torneoService.generarFixtureAleatorio(id);
+        return org.springframework.http.ResponseEntity.ok(fixture);
+    }
+
+    @PostMapping("/{id}/fixture/manual")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public org.springframework.http.ResponseEntity<List<PartidoTorneo>> generarFixtureManual(
+            @PathVariable Long id, 
+            @RequestBody List<com.clubset.modules.torneo.dto.PartidoManualDTO> partidos) {
+        
+        List<PartidoTorneo> fixture = torneoService.generarFixtureManual(id, partidos);
+        return org.springframework.http.ResponseEntity.ok(fixture);
     }
 }
