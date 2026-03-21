@@ -1,7 +1,13 @@
 package com.clubset.modules.torneo;
 
+import com.clubset.core.shared.enums.Categoria;
+import com.clubset.modules.torneo.enums.EstadoTorneo;
+import com.clubset.modules.torneo.enums.FormatoTorneo;
+import com.clubset.modules.torneo.enums.ModalidadTorneo;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,10 +24,34 @@ public class Torneo {
 
     private String nombre;
     private LocalDate fechaInicio;
+    private LocalDate fechaFin;
 
-    // Relación: Un torneo tiene muchos partidos
-    // mappedBy indica que la relación se "manda" desde el campo 'torneo' en la clase Partido
-    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL)
+    @Enumerated(EnumType.STRING)
+    private FormatoTorneo formato;
+
+    @Enumerated(EnumType.STRING)
+    private ModalidadTorneo modalidad;
+
+    @Enumerated(EnumType.STRING)
+    private Categoria categoriaEsperada; // Puede ser null si es 'Libre'
+
+    private BigDecimal costoInscripcion;
+    
+    private String premiosAdicionales;
+
+    // Puntos automáticos a inyectar al final del torneo
+    private Integer puntosCampeon;
+    private Integer puntosFinalista;
+    private Integer puntosSemi;
+
+    @Enumerated(EnumType.STRING)
+    private EstadoTorneo estado;
+
+    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<Partido> partidos;
+    private List<EquipoTorneo> equiposInscriptos;
+
+    @OneToMany(mappedBy = "torneo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<PartidoTorneo> partidos;
 }
