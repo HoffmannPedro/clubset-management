@@ -24,6 +24,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final ReservaRepository reservaRepository;
+    private final com.clubset.modules.torneo.EquipoTorneoRepository equipoTorneoRepository;
     private final FinanzasService finanzasService; // Inyectamos el calculador financiero
     private final UsuarioMapper usuarioMapper;
     
@@ -129,8 +130,12 @@ public class UsuarioService {
     // Mapper actualizado
     private UsuarioDTO ensamblarPerfil(Usuario usuario) {
         // 1. Cálculos pesados delegados a SQL
-        BigDecimal deudaBD = reservaRepository.calcularDeudaTotalUsuario(usuario.getId());
-        BigDecimal deudaFinal = deudaBD != null ? deudaBD : BigDecimal.ZERO;
+        BigDecimal deudaReservas = reservaRepository.calcularDeudaTotalUsuario(usuario.getId());
+        BigDecimal deudaTorneos = equipoTorneoRepository.calcularDeudaTorneosUsuario(usuario.getId());
+        
+        BigDecimal dr = deudaReservas != null ? deudaReservas : BigDecimal.ZERO;
+        BigDecimal dt = deudaTorneos != null ? deudaTorneos : BigDecimal.ZERO;
+        BigDecimal deudaFinal = dr.add(dt);
         
         Long partidos = reservaRepository.countByUsuarioId(usuario.getId());
 

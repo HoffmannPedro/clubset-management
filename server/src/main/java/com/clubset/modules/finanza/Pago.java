@@ -39,6 +39,14 @@ public class Pago {
     @JoinColumn(name = "reserva_id", nullable = true)
     private Reserva reserva;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "torneo_id", nullable = true)
+    private com.clubset.modules.torneo.Torneo torneoPactado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = true)
+    private com.clubset.modules.usuario.Usuario usuarioPagador;
+
     
     // Sobrescribimos Equals y HashCode manualmente basándonos solo en el ID
     // Esto evita ciclos infinitos y problemas con Hibernate
