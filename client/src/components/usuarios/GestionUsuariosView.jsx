@@ -3,35 +3,56 @@ import FormularioUsuario from './FormularioUsuario';
 import ListaUsuarios from './ListaUsuarios';
 import PerfilUsuario from './PerfilUsuario';
 
-const GestionUsuariosView = ({ refreshKey, onEditar, onEliminar, onVerPerfil, onUsuarioModificado, usuarioAEditar, usuarioInspeccionado, onVolverALista }) => {
-    // Estado local para manejar las sub-pestañas
+import { deleteUsuario } from '../../services/usuarioService';
+
+const GestionUsuariosView = () => {
     const [subTabActiva, setSubTabActiva] = useState('LISTA'); // 'LISTA', 'FORMULARIO', 'PERFIL'
+    
+    // ESTADOS MUDADOS DESDE EL ADMIN PANEL PARA EVITAR PROP DRILLING Y RE-RENDERS MASIVOS
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [usuarioAEditar, setUsuarioAEditar] = useState(null);
+    const [usuarioInspeccionado, setUsuarioInspeccionado] = useState(null);
 
-    // Efectos para saltar de pestaña automáticamente cuando vienen props desde el AdminPanel
-    useEffect(() => {
-        if (usuarioAEditar) {
-            setSubTabActiva('FORMULARIO');
-        }
-    }, [usuarioAEditar]);
+    const triggerRefresh = () => setRefreshKey(prev => prev + 1);
 
-    useEffect(() => {
-        if (usuarioInspeccionado) {
-            setSubTabActiva('PERFIL');
+    const handleEditar = (usuario) => {
+        setUsuarioAEditar(usuario);
+        setSubTabActiva('FORMULARIO');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleEliminar = async (id) => {
+        if (window.confirm('⚠️ ¿Estás seguro de eliminar este socio permanentemente?')) {
+            try {
+                await deleteUsuario(id);
+                triggerRefresh();
+            } catch (error) {
+                console.error("Error al eliminar:", error);
+                alert("Hubo un error al intentar eliminar el socio.");
+            }
         }
-    }, [usuarioInspeccionado]);
+    };
+
+    const handleVerPerfil = (id) => {
+        setUsuarioInspeccionado(id);
+        setSubTabActiva('PERFIL');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     // Handler para cuando se crea o edita un usuario con éxito
     const handleExito = () => {
-        onUsuarioModificado(); // Llama al padre para refrescar
-        setSubTabActiva('LISTA'); // Lo devuelve a la lista
+        triggerRefresh();
+        setUsuarioAEditar(null);
+        setSubTabActiva('LISTA');
     };
 
     // Handler para cancelar edición o volver del perfil
     const handleVolver = () => {
-        if (subTabActiva === 'PERFIL') onVolverALista();
-        if (subTabActiva === 'FORMULARIO' && usuarioAEditar) onUsuarioModificado(); // Limpia la edición en el padre
+        setUsuarioAEditar(null);
+        setUsuarioInspeccionado(null);
         setSubTabActiva('LISTA');
     };
+
 
     return (
         <div className="space-y-6 animate-in slide-in-from-bottom-4">
@@ -69,9 +90,9 @@ const GestionUsuariosView = ({ refreshKey, onEditar, onEliminar, onVerPerfil, on
                 {subTabActiva === 'LISTA' && (
                     <ListaUsuarios 
                         refreshKey={refreshKey}
-                        onEditar={onEditar}
-                        onEliminar={onEliminar}
-                        onVerPerfil={onVerPerfil}
+                        onEditar={handleEditar}
+                        onEliminar={handleEliminar}
+                        onVerPerfil={handleVerPerfil}
                     />
                 )}
 

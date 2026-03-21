@@ -4,24 +4,33 @@ import GrillaReservas from './GrillaReservas';
 import VistaListaReservas from './VistaListaReservas';
 import { useGrillaReservas } from '../../hooks/useGrillaReservas';
 
-const GestionReservasView = ({ refreshKey, onReservaExitosa, preseleccion, onEmptySlotClick }) => {
+const GestionReservasView = () => {
     // Estado local para manejar las 3 sub-pestañas
     const [subTabActiva, setSubTabActiva] = useState('GRILLA'); // 'GRILLA', 'LISTA', 'FORMULARIO'
+
+    // ESTADOS MUDADOS DESDE EL ADMIN PANEL PARA EVITAR PROP DRILLING Y RE-RENDERS MASIVOS
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [preseleccion, setPreseleccion] = useState(null);
+
+    const triggerRefresh = () => setRefreshKey(prev => prev + 1);
 
     // Extraemos los datos del hook AQUÍ arriba para poder compartirlos con Grilla y Lista
     const grillaData = useGrillaReservas(refreshKey);
 
-    // Interceptamos el clic en el hueco vacío ANTES de avisarle al padre
+    // Click en un hueco vacío de la grilla
     const handleEmptySlotClickWrapper = (canchaId, hora, fecha) => {
-        setSubTabActiva('FORMULARIO'); // Cambiamos de pestaña localmente en el momento
-        onEmptySlotClick(canchaId, hora, fecha); // Le pasamos los datos al padre
+        setPreseleccion({ canchaId, hora, fecha });
+        setSubTabActiva('FORMULARIO');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Handler extendido para cuando se crea una reserva
+    // Handler cuando se crea una reserva
     const handleFormSubmitExitoso = () => {
-        onReservaExitosa(); // Llama al padre (AdminPanel) para limpiar la preselección
-        setSubTabActiva('GRILLA'); // Lo devolvemos a la grilla para que vea su reserva creada
+        triggerRefresh();
+        setPreseleccion(null);
+        setSubTabActiva('GRILLA');
     };
+
 
     return (
         <div className="space-y-6 animate-in slide-in-from-bottom-4">

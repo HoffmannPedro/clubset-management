@@ -7,7 +7,6 @@ import Sidebar from '../layout/Sidebar';
 import CajaView from '../caja/CajaView';
 import DashboardView from '../dashboard/DashboardView';
 import PerfilUsuario from '../usuarios/PerfilUsuario';
-import { deleteUsuario } from '../../services/usuarioService';
 import GestionReservasView from '../reservas/GestionReservasView';
 import GestionUsuariosView from '../usuarios/GestionUsuariosView';
 import GestionCanchasView from '../canchas/GestionCanchasView';
@@ -22,12 +21,10 @@ const AdminPanel = () => {
     // Extraemos la pestaña actual de la URL
     const activeTab = location.pathname.split('/')[1] || '';
 
-    const [usuarioEditar, setUsuarioEditar] = useState(null);
-    const [seleccionGrilla, setSeleccionGrilla] = useState(null);
-    const [usuarioInspeccionado, setUsuarioInspeccionado] = useState(null);
-
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
+    
+    // Mantenemos refreshTrigger solo para Canchas (Temporal)
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const isAdmin = user?.rol === 'ADMIN';
@@ -44,45 +41,6 @@ const AdminPanel = () => {
     const menuItems = allMenuItems.filter(item => item.roles.includes(user?.rol));
 
     const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
-
-    const handleEditar = (usuario) => {
-        setUsuarioEditar(usuario);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleEliminar = async (id) => {
-        if (window.confirm('⚠️ ¿Estás seguro de eliminar este usuario permanentemente?')) {
-            try {
-                await deleteUsuario(id);
-                triggerRefresh();
-            } catch (error) {
-                console.error("Error al eliminar:", error);
-                alert("Hubo un error al intentar eliminar el usuario.");
-            }
-        }
-    };
-
-    const handleExito = () => {
-        triggerRefresh();
-        setUsuarioEditar(null);
-    };
-
-    const handleSlotClick = (canchaId, hora, fecha) => {
-        setSeleccionGrilla({ canchaId, hora, fecha });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleReservaExitosa = () => {
-        triggerRefresh();
-        setSeleccionGrilla(null);
-    };
-
-    const handleVerPerfil = (id) => {
-        setUsuarioInspeccionado(id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleVolverALista = () => setUsuarioInspeccionado(null);
 
     return (
         <div className="flex min-h-screen bg-background text-text font-sans">
@@ -119,23 +77,9 @@ const AdminPanel = () => {
                                         <GestionCanchasView refreshKey={refreshTrigger} onCanchaCreada={triggerRefresh} />
                                     } />
 
-                                    {/* --- NUEVO BLOQUE DE USUARIOS MUCHO MÁS LIMPIO --- */}
-                                    <Route path="/usuarios" element={
-                                        <GestionUsuariosView
-                                            refreshKey={refreshTrigger}
-                                            onEditar={handleEditar}
-                                            onEliminar={handleEliminar}
-                                            onVerPerfil={handleVerPerfil}
-                                            onUsuarioModificado={handleExito}
-                                            usuarioAEditar={usuarioEditar}
-                                            usuarioInspeccionado={usuarioInspeccionado}
-                                            onVolverALista={handleVolverALista}
-                                        />
-                                    } />
+                                    <Route path="/usuarios" element={<GestionUsuariosView />} />
 
-                                    <Route path="/reservas" element={
-                                        <GestionReservasView refreshKey={refreshTrigger} onReservaExitosa={handleReservaExitosa} preseleccion={seleccionGrilla} onEmptySlotClick={handleSlotClick} />
-                                    } />
+                                    <Route path="/reservas" element={<GestionReservasView />} />
                                 </>
                             )}
 
