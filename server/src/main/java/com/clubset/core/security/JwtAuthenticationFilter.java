@@ -68,14 +68,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            manejarErrorJwt(response, "El token de sesión ha expirado. Por favor, vuelva a iniciar sesión.");
+            manejarErrorJwt(request, response, "El token de sesión ha expirado. Por favor, vuelva a iniciar sesión.");
         } catch (JwtException e) {
-            manejarErrorJwt(response, "Token de autenticación inválido o manipulado.");
+            manejarErrorJwt(request, response, "Token de autenticación inválido o manipulado.");
         }
     }
 
     // Método para devolver nuestro DTO estructurado directo al HttpServletResponse
-    private void manejarErrorJwt(HttpServletResponse response, String mensaje) throws IOException {
+    private void manejarErrorJwt(HttpServletRequest request, HttpServletResponse response, String mensaje) throws IOException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
@@ -83,6 +83,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 HttpStatus.UNAUTHORIZED.value(),
                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                 mensaje,
+                request.getRequestURI(),
+                null,
                 LocalDateTime.now()
         );
 
