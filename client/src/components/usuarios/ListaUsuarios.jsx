@@ -26,9 +26,9 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar, onVerPerfil }) => {
     const usuariosFiltrados = useMemo(() => {
         if (!busqueda) return usuarios;
         const texto = busqueda.toLowerCase();
-        return usuarios.filter(u => 
-            u.nombre.toLowerCase().includes(texto) || 
-            u.apellido.toLowerCase().includes(texto) || 
+        return usuarios.filter(u =>
+            u.nombre.toLowerCase().includes(texto) ||
+            u.apellido.toLowerCase().includes(texto) ||
             u.email.toLowerCase().includes(texto)
         );
     }, [usuarios, busqueda]);
@@ -37,11 +37,11 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar, onVerPerfil }) => {
 
     return (
         <div className="space-y-4 animate-in fade-in duration-500">
-            
+
             {/* --- BARRA DE BÚSQUEDA --- */}
             <div className="bg-surface p-4 rounded-xl border border-border shadow-sm">
-                <input 
-                    type="text" 
+                <input
+                    type="text"
                     placeholder="Buscar por nombre, apellido o email..."
                     className="w-full bg-background border border-border text-text rounded-lg p-3 focus:outline-none focus:border-primary transition-all text-sm"
                     value={busqueda}
@@ -98,7 +98,7 @@ const ListaUsuarios = ({ refreshKey, onEditar, onEliminar, onVerPerfil }) => {
                                 <thead>
                                     <tr className="bg-background/50 border-b border-border text-textMuted uppercase text-[10px] font-black tracking-[0.2em]">
                                         <th className="p-6">Identidad del Socio</th>
-                                        <th className="p-6">Canal de Comunicación</th>
+                                        <th className="p-6">Email</th>
                                         <th className="p-6">Rol</th>
                                         <th className="p-6 text-center">Acciones</th>
                                     </tr>

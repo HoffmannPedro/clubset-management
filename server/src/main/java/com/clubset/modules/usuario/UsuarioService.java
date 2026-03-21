@@ -121,6 +121,9 @@ public class UsuarioService {
         if (datosNuevos.getManoHabil() != null) {
             usuario.setManoHabil(datosNuevos.getManoHabil());
         }
+        if (datosNuevos.getCategoria() != null) {
+            usuario.setCategoria(datosNuevos.getCategoria());
+        }
     }
 
     // Mapper actualizado
