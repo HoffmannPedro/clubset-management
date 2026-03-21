@@ -1,10 +1,11 @@
 package com.clubset.service;
 
-import com.clubset.entity.Reserva;
-import com.clubset.entity.Usuario;
-import com.clubset.enums.RolUsuario;
-import com.clubset.repository.ReservaRepository;
-import com.clubset.repository.UsuarioRepository;
+import com.clubset.modules.reserva.Reserva;
+import com.clubset.modules.reserva.ReservaService;
+import com.clubset.modules.usuario.Usuario;
+import com.clubset.core.shared.enums.RolUsuario;
+import com.clubset.modules.reserva.ReservaRepository;
+import com.clubset.modules.usuario.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
