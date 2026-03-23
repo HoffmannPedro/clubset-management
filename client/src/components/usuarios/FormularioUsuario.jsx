@@ -37,11 +37,11 @@ const FormularioUsuario = ({ onUsuarioCreado, usuarioAEditar, onCancelar }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClass}>Nombre</label>
-                            <input className={inputClass} name="nombre" placeholder="Ej: Lionel" value={formData.nombre} onChange={handleChange} />
+                            <input className={`${inputClass} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`} name="nombre" placeholder="Ej: Lionel" value={formData.nombre} onChange={handleChange} readOnly={isEditing} />
                         </div>
                         <div>
                             <label className={labelClass}>Apellido</label>
-                            <input className={inputClass} name="apellido" placeholder="Ej: Messi" value={formData.apellido} onChange={handleChange} />
+                            <input className={`${inputClass} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`} name="apellido" placeholder="Ej: Messi" value={formData.apellido} onChange={handleChange} readOnly={isEditing} />
                         </div>
                     </div>
 
@@ -61,7 +61,7 @@ const FormularioUsuario = ({ onUsuarioCreado, usuarioAEditar, onCancelar }) => {
                         </div>
                         <div>
                             <label className={labelClass}>Teléfono / WhatsApp</label>
-                            <input className={inputClass} name="telefono" type="tel" placeholder="11 1234 5678" value={formData.telefono} onChange={handleChange} />
+                            <input className={`${inputClass} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`} name="telefono" type="tel" placeholder="11 1234 5678" value={formData.telefono} onChange={handleChange} readOnly={isEditing} />
                         </div>
                     </div>
                 </div>
@@ -121,15 +121,16 @@ const FormularioUsuario = ({ onUsuarioCreado, usuarioAEditar, onCancelar }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClass}>
-                                Contraseña {isEditing && <span className="text-[9px] text-textMuted normal-case">(Dejar vacío para mantener actual)</span>}
+                                Contraseña {isEditing && <span className="text-[9px] text-textMuted normal-case">(Privada del usuario)</span>}
                             </label>
                             <input 
-                                className={inputClass} 
+                                className={`${inputClass} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`} 
                                 name="password" 
                                 type="password" 
-                                placeholder={isEditing ? "Sin cambios" : "••••••••"} 
-                                value={formData.password} 
+                                placeholder={isEditing ? "Oculta por seguridad" : "••••••••"} 
+                                value={isEditing ? "" : formData.password} 
                                 onChange={handleChange} 
+                                readOnly={isEditing}
                             />
                         </div>
                         <div>

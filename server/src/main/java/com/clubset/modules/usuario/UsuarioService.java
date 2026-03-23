@@ -41,7 +41,14 @@ public class UsuarioService {
         usuario.setApellido(dto.getApellido());
         usuario.setEmail(dto.getEmail());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
-        usuario.setRol(RolUsuario.USER); 
+        
+        usuario.setRol(dto.getRol() != null ? dto.getRol() : RolUsuario.USER); 
+        usuario.setTelefono(dto.getTelefono());
+        usuario.setFotoPerfilUrl(dto.getFotoPerfilUrl());
+        usuario.setManoHabil(dto.getManoHabil());
+        usuario.setCategoria(dto.getCategoria());
+        usuario.setGenero(dto.getGenero());
+
         usuario.setPuntosRanking(0);
         
         usuarioRepository.save(usuario);
@@ -52,7 +59,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
                 
-        actualizarCamposSeguros(usuario, dto);
+        actualizarCamposDeportivos(usuario, dto);
         return ensamblarPerfil(usuarioRepository.save(usuario));
     }
 
@@ -101,17 +108,35 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        actualizarCamposSeguros(usuario, datosNuevos);
+        actualizarCamposPersonales(usuario, datosNuevos);
 
         return ensamblarPerfil(usuarioRepository.save(usuario));
     }
 
-    private void actualizarCamposSeguros(Usuario usuario, UsuarioActualizacionRequestDTO datosNuevos) {
+    private void actualizarCamposDeportivos(Usuario usuario, UsuarioActualizacionRequestDTO datosNuevos) {
+        if (datosNuevos.getManoHabil() != null) {
+            usuario.setManoHabil(datosNuevos.getManoHabil());
+        }
+        if (datosNuevos.getCategoria() != null) {
+            usuario.setCategoria(datosNuevos.getCategoria());
+        }
+        if (datosNuevos.getGenero() != null) {
+            usuario.setGenero(datosNuevos.getGenero());
+        }
+        if (datosNuevos.getRol() != null) {
+            usuario.setRol(datosNuevos.getRol());
+        }
+    }
+
+    private void actualizarCamposPersonales(Usuario usuario, UsuarioActualizacionRequestDTO datosNuevos) {
         if (datosNuevos.getNombre() != null && !datosNuevos.getNombre().isBlank()) {
             usuario.setNombre(datosNuevos.getNombre());
         }
         if (datosNuevos.getApellido() != null && !datosNuevos.getApellido().isBlank()) {
             usuario.setApellido(datosNuevos.getApellido());
+        }
+        if (datosNuevos.getEmail() != null && !datosNuevos.getEmail().isBlank()) {
+            usuario.setEmail(datosNuevos.getEmail());
         }
         if (datosNuevos.getTelefono() != null) {
             usuario.setTelefono(datosNuevos.getTelefono());
@@ -119,11 +144,8 @@ public class UsuarioService {
         if (datosNuevos.getFotoPerfilUrl() != null) {
             usuario.setFotoPerfilUrl(datosNuevos.getFotoPerfilUrl());
         }
-        if (datosNuevos.getManoHabil() != null) {
-            usuario.setManoHabil(datosNuevos.getManoHabil());
-        }
-        if (datosNuevos.getCategoria() != null) {
-            usuario.setCategoria(datosNuevos.getCategoria());
+        if (datosNuevos.getPassword() != null && !datosNuevos.getPassword().isBlank()) {
+            usuario.setPassword(passwordEncoder.encode(datosNuevos.getPassword()));
         }
     }
 

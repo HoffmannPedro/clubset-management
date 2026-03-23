@@ -50,7 +50,8 @@ public class UsuarioController {
         return usuarioService.buscarPorEmail(email);
     }
 
-    // PUT: Actualizar usuario existente
+    // PUT: Actualizar usuario existente (ADMIN ONLY - Campos Deportivos)
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
     public UsuarioDTO actualizarUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioActualizacionRequestDTO requestDTO) {
         return usuarioService.actualizarDesdeDTO(id, requestDTO);

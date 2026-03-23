@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface PartidoTorneoRepository extends JpaRepository<PartidoTorneo, Long> {
-    List<PartidoTorneo> findByTorneoId(Long torneoId);
+    List<PartidoTorneo> findByTorneoIdOrderByFaseAscOrdenLlaveAsc(Long torneoId);
 }

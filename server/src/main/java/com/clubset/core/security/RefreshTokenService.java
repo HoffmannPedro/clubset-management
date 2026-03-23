@@ -23,15 +23,20 @@ public class RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(Long userId) {
         var usuario = usuarioRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        refreshTokenRepository.deleteByUsuario(usuario);
+        
+        String tokenStr = UUID.randomUUID().toString();
+        Instant expiry = Instant.now().plusMillis(refreshTokenDurationMs);
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .usuario(usuario)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(refreshTokenDurationMs))
-                .build();
+        // Utilizamos Upsert nativo para evitar race conditions causadas por múltiples 
+        // peticiones de login que ocurren en paralelo (ej, por React rendering dos veces).
+        refreshTokenRepository.upsertToken(tokenStr, expiry, userId);
 
-        return refreshTokenRepository.save(refreshToken);
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUsuario(usuario);
+        refreshToken.setToken(tokenStr);
+        refreshToken.setExpiryDate(expiry);
+
+        return refreshToken;
     }
 
     public Optional<RefreshToken> findByToken(String token) {

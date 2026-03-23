@@ -10,6 +10,7 @@ import PerfilUsuario from '../usuarios/PerfilUsuario';
 import GestionReservasView from '../reservas/GestionReservasView';
 import GestionUsuariosView from '../usuarios/GestionUsuariosView';
 import GestionCanchasView from '../canchas/GestionCanchasView';
+import GestionTorneosView from '../torneos/GestionTorneosView';
 
 const AdminPanel = () => {
     const { user } = useAuth();
@@ -35,6 +36,7 @@ const AdminPanel = () => {
         { id: 'caja', label: 'Caja Diaria', icon: '💵', roles: ['ADMIN'] },
         { id: 'reservas', label: 'Gestión Reservas', icon: '📅', roles: ['ADMIN'] },
         { id: 'canchas', label: 'Canchas', icon: '🎾', roles: ['ADMIN'] },
+        { id: 'torneos', label: 'Torneos', icon: '🏆', roles: ['ADMIN'] },
         { id: 'usuarios', label: 'Socios', icon: '👥', roles: ['ADMIN'] },
     ];
 
@@ -76,6 +78,8 @@ const AdminPanel = () => {
                                     <Route path="/canchas" element={
                                         <GestionCanchasView refreshKey={refreshTrigger} onCanchaCreada={triggerRefresh} />
                                     } />
+
+                                    <Route path="/torneos" element={<GestionTorneosView />} />
 
                                     <Route path="/usuarios" element={<GestionUsuariosView />} />
 
