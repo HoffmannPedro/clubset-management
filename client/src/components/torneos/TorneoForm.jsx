@@ -52,7 +52,7 @@ const TorneoForm = ({ onClose, onCreado }) => {
 
     return (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-            <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-2xl max-h-[90dvh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center p-6 border-b border-border bg-background">
                     <h2 className="text-xl font-black uppercase tracking-widest text-text">Lanzar Nuevo Torneo</h2>
                     <button onClick={onClose} className="p-2 bg-surface hover:bg-red-500/20 text-textMuted hover:text-red-400 rounded-lg transition-colors">

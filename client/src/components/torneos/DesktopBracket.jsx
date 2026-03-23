@@ -225,16 +225,26 @@ const DesktopBracket = ({ fases, onPartidoClick }) => {
     const rondasLaterales = fases.slice(0, fases.length - 1);
 
     // Split each lateral round in half: left bracket = first half, right bracket = second half
-    const leftCols = rondasLaterales.map(f => ({
-        ...f,
-        partidos: f.partidos.slice(0, Math.ceil(f.partidos.length / 2)),
-    }));
+    const leftCols = rondasLaterales.map(f => {
+        const mitad = f.partidos.length / 2;
+        return {
+            ...f,
+            partidos: f.partidos
+                .filter(p => p.ordenLlave < mitad)
+                .sort((a, b) => a.ordenLlave - b.ordenLlave),
+        };
+    });
 
     // Right bracket columns are in REVERSE order (innermost round first, closest to center)
-    const rightCols = [...rondasLaterales].reverse().map(f => ({
-        ...f,
-        partidos: f.partidos.slice(Math.ceil(f.partidos.length / 2)),
-    }));
+    const rightCols = [...rondasLaterales].reverse().map(f => {
+        const mitad = f.partidos.length / 2;
+        return {
+            ...f,
+            partidos: f.partidos
+                .filter(p => p.ordenLlave >= mitad)
+                .sort((a, b) => a.ordenLlave - b.ordenLlave),
+        };
+    });
 
     // Total height driven by the outermost round (most matches per side)
     const outerMatchCount = leftCols.length > 0 ? leftCols[0].partidos.length : 1;

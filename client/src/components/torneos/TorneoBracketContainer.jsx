@@ -217,6 +217,7 @@ const TorneoBracketContainer = ({ torneoId, torneoData }) => {
             {isModalOpen && (
                 <InscripcionModal 
                     torneo={torneoData} 
+                    equipos={equipos}
                     onClose={() => setIsModalOpen(false)} 
                     onInscrito={cargarFixtureYEquipos} 
                 />
